@@ -1,13 +1,18 @@
 {
   "builds": [
     {
-      "src": "build/web/**/*",
+      "src": "build/web/**",
       "use": "@vercel/static"
     }
   ],
   "routes": [
     {
-      "handle": "filesystem"
+      "src": "/assets/(.*)",
+      "dest": "/build/web/assets/$1"
+    },
+    {
+      "src": "/(.+\.[a-zA-Z0-9]+)$",
+      "dest": "/build/web/$1"
     },
     {
       "src": "/(.*)",
