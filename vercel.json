@@ -1,23 +1,23 @@
 {
-    "version": 2,
-    "builds": [
-      {
-        "src": "build/web/**",
-        "use": "@vercel/static"
-      }
-    ],
-    "routes": [
-      {
-        "src": "/(.*)",
-        "dest": "/index.html"
-      }
-    ],
-    "build": {
-      "env": {
-        "FLUTTER_ROOT": "/opt/buildhome/flutter"
-      },
-      "scripts": {
-        "build": "flutter pub get && flutter build web"
+  "version": 2,
+  "builds": [
+    {
+      "src": "build/web/**",
+      "use": "@vercel/static",
+      "config": {
+        "buildCommand": "flutter pub get && flutter build web"
       }
     }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ],
+  "build": {
+    "env": {
+      "FLUTTER_ROOT": "/opt/buildhome/flutter"
+    }
   }
+}
