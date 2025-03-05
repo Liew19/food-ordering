@@ -19,7 +19,7 @@
       "dest": "/build/web/icons/$1"
     },
     {
-      "src": "/(.*\\.(js|json|png))",
+      "src": "/(.*\\.(js|json|png|wasm|ttf|frag))",
       "dest": "/build/web/$1"
     },
     {
