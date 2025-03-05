@@ -1,16 +1,23 @@
-# food_ordering_app
+# food-ordering-app
 
-A new Flutter project.
+A restaurant ordering system developed with Flutter.
 
-## Getting Started
+## Project Description
 
-This project is a starting point for a Flutter application.
+This is a modern restaurant ordering system designed to enhance dining experience and improve restaurant operational efficiency.
 
-A few resources to get you started if this is your first Flutter project:
+## Main Features
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+- Menu browsing and ordering
+- Order management
+- Table management
+- Table sharing functionality
+- Kitchen order processing
+- Staff management interface
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Tech Stack
+
+- Flutter
+- Firebase
+- Provider state management
+- Hive local storage
