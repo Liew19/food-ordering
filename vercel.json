@@ -1,26 +1,13 @@
 {
   "builds": [
     {
-      "src": "build/web/**",
+      "src": "build/web/**/*",
       "use": "@vercel/static"
     }
   ],
   "routes": [
     {
-      "src": "/assets/(.*)",
-      "dest": "/build/web/assets/$1"
-    },
-    {
-      "src": "/canvaskit/(.*)",
-      "dest": "/build/web/canvaskit/$1"
-    },
-    {
-      "src": "/icons/(.*)",
-      "dest": "/build/web/icons/$1"
-    },
-    {
-      "src": "/(.*\\.(js|json|png|wasm|ttf|frag))",
-      "dest": "/build/web/$1"
+      "handle": "filesystem"
     },
     {
       "src": "/(.*)",
