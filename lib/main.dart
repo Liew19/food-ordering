@@ -28,8 +28,8 @@ class MyApp extends StatelessWidget {
         builder:
             (context, themeProvider, child) => MaterialApp(
               title: 'Restaurant App',
-              theme: AppTheme.lightTheme, // 亮色主题
-              darkTheme: AppTheme.darkTheme, // 暗色主题
+              theme: AppTheme.lightTheme,
+              darkTheme: AppTheme.darkTheme,
               themeMode:
                   themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
               debugShowCheckedModeBanner: false,
