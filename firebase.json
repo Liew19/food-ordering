@@ -1,0 +1,29 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "food-ordering-app-ebfca",
+          "appId": "1:1192793751:android:bfa989f8d8e70ddabbbbd2",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "food-ordering-app-ebfca",
+          "configurations": {
+            "android": "1:1192793751:android:bfa989f8d8e70ddabbbbd2",
+            "ios": "1:1192793751:ios:597ffd0a97d42687bbbbd2",
+            "macos": "1:1192793751:ios:597ffd0a97d42687bbbbd2",
+            "web": "1:1192793751:web:381f4257406adc35bbbbd2",
+            "windows": "1:1192793751:web:8fbb17225fe0ab89bbbbd2"
+          }
+        }
+      }
+    }
+  },
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  }
+}

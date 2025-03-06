@@ -3,7 +3,7 @@ import '../menu_item.dart';
 
 class MenuItemAdapter extends TypeAdapter<MenuItem> {
   @override
-  final int typeId = 0; // Use a unique typeId for each adapter
+  final int typeId = 1;
 
   @override
   MenuItem read(BinaryReader reader) {

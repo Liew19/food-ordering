@@ -10,12 +10,35 @@ import 'package:provider/provider.dart';
 import 'state/cart_provider.dart';
 import 'state/order_provider.dart';
 import 'state/theme_provider.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+import 'services/hive_service.dart';
+import 'services/api_service.dart';
 
-void main() {
-  runApp(MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize Firebase with the options for your app
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  
+  // Initialize Hive and ApiService instances
+
+  final hiveService = HiveService();
+  await hiveService.init();
+  
+  // Create an instance of ApiService with the HiveService as a dependency
+  final apiService = ApiService(hiveService: hiveService);
+  
+  runApp(MyApp(apiService: apiService));
 }
 
 class MyApp extends StatelessWidget {
+  final ApiService apiService;
+
+  const MyApp({required this.apiService, Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
