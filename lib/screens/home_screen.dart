@@ -72,12 +72,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       initialState: isDarkMode,
                     ),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.search),
-                    onPressed: () {
-                      // code to open search screen
-                    },
-                  ),
                 ],
                 flexibleSpace: FlexibleSpaceBar(
                   title: const Text(
@@ -109,7 +103,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   decoration: InputDecoration(
                     hintText: 'Search Menu Item...',
                     prefixIcon: const Icon(Icons.search),
-                    // used to customize the appearance of the TextField
                   ),
                   onChanged: (value) {
                     apiService.getMenuItems().then((menuItems) {
@@ -129,13 +122,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     } else {
                       final menuItems = snapshot.data!;
 
-                      // use the filteredItems list instead of menuItems
-
                       if (filteredItems.isEmpty && selectedCategory == 'All') {
                         filteredItems = menuItems;
                       }
 
-                      // get all unique categories from menuItems list
                       final categories = [
                         'All',
                         ...{...menuItems.map((e) => e.category)},
@@ -143,9 +133,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
                       return Column(
                         children: [
-                          // choice chip for categories
-                          SizedBox(
+                          Container(
                             height: 50,
+                            margin: const EdgeInsets.only(bottom: 8.0),
                             child: ListView.builder(
                               scrollDirection: Axis.horizontal,
                               itemCount: categories.length,
@@ -189,8 +179,6 @@ class _HomeScreenState extends State<HomeScreen> {
                               },
                             ),
                           ),
-
-                          // GridView for menu items
                           Expanded(
                             child: Padding(
                               padding: const EdgeInsets.all(12.0),

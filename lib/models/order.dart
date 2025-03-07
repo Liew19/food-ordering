@@ -85,7 +85,7 @@ class Order {
 
   // Check if an item is handled by staff (beverages and desserts)
   bool _isStaffItem(MenuItem item) {
-    return item.category.toLowerCase() == 'beverages' ||
+    return item.category.toLowerCase() == 'beverage' ||
         item.category.toLowerCase() == 'dessert';
   }
 

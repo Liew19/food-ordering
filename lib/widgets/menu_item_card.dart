@@ -31,8 +31,8 @@ class MenuItemCard extends StatelessWidget {
               topLeft: Radius.circular(16),
               topRight: Radius.circular(16),
             ),
-            child: Image.network(
-              item.imageUrl,
+            child: Image.asset(
+              item.imagePath,
               height: 160,
               width: double.infinity,
               fit: BoxFit.cover,
@@ -42,22 +42,6 @@ class MenuItemCard extends StatelessWidget {
                   color: Colors.grey[200],
                   child: const Center(
                     child: Icon(Icons.restaurant, size: 50, color: Colors.grey),
-                  ),
-                );
-              },
-              loadingBuilder: (context, child, loadingProgress) {
-                if (loadingProgress == null) return child;
-                return Container(
-                  height: 160,
-                  color: Colors.grey[200],
-                  child: Center(
-                    child: CircularProgressIndicator(
-                      value:
-                          loadingProgress.expectedTotalBytes != null
-                              ? loadingProgress.cumulativeBytesLoaded /
-                                  loadingProgress.expectedTotalBytes!
-                              : null,
-                    ),
                   ),
                 );
               },

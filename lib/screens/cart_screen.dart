@@ -96,19 +96,8 @@ class CartScreen extends StatelessWidget {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
-              child: Image.network(
-                cartItem.item.imageUrl,
-                width: 80,
-                height: 80,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    width: 80,
-                    height: 80,
-                    color: isDarkMode ? Colors.grey[800] : Colors.grey[300],
-                    child: const Icon(Icons.image_not_supported_outlined),
-                  );
-                },
+              child: Stack(
+                children: [_buildItemImage(context, cartItem, isDarkMode)],
               ),
             ),
             const SizedBox(width: 16),
@@ -162,6 +151,64 @@ class CartScreen extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildItemImage(
+    BuildContext context,
+    CartItem cartItem,
+    bool isDarkMode,
+  ) {
+    // Force rebuild of image path
+    String imagePath = cartItem.item.imagePath;
+    debugPrint('Loading image for ${cartItem.item.name}: $imagePath');
+
+    return Image.asset(
+      imagePath,
+      width: 80,
+      height: 80,
+      fit: BoxFit.cover,
+      errorBuilder: (context, error, stackTrace) {
+        debugPrint('Error loading image: $imagePath');
+        debugPrint('Item name: ${cartItem.item.name}');
+        debugPrint('Item category: ${cartItem.item.category}');
+        debugPrint('Error details: $error');
+
+        return Container(
+          width: 80,
+          height: 80,
+          decoration: BoxDecoration(
+            color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                cartItem.item.category.toLowerCase() == 'beverage'
+                    ? Icons.local_drink
+                    : Icons.restaurant,
+                size: 24,
+                color: isDarkMode ? Colors.grey[600] : Colors.grey[400],
+              ),
+              const SizedBox(height: 4),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: Text(
+                  '${cartItem.item.category}\n${cartItem.item.name}',
+                  style: TextStyle(
+                    fontSize: 8,
+                    color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
