@@ -207,7 +207,7 @@ class OrderItemCard extends StatelessWidget {
 
   // Determine if item is handled by staff (beverages and desserts)
   bool _isStaffItem(MenuItem item) {
-    return item.category.toLowerCase() == 'beverages' ||
+    return item.category.toLowerCase() == 'beverage' ||
         item.category.toLowerCase() == 'dessert';
   }
 }
