@@ -3,13 +3,14 @@ import 'package:provider/provider.dart';
 import '../state/order_provider.dart';
 import '../widgets/order_item_card.dart';
 import '../models/order.dart';
+import '../theme.dart';
 
 class KitchenScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final orderProvider = Provider.of<OrderProvider>(context);
     return Scaffold(
-      appBar: AppBar(title: Text('Kitchen Orders')),
+      appBar: AppTheme.gradientAppBar(title: 'Kitchen Orders'),
       body: ListView.builder(
         itemCount: orderProvider.kitchenOrders.length,
         itemBuilder: (context, index) {

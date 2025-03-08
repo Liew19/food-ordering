@@ -4,6 +4,7 @@ import 'package:fyp/models/table.dart';
 import '../widgets/shared_table_dialog.dart';
 import '../widgets/table_legend.dart';
 import '../widgets/table_grid_item.dart';
+import '../theme.dart';
 
 class SharedTableScreen extends StatefulWidget {
   const SharedTableScreen({Key? key}) : super(key: key);
@@ -185,10 +186,9 @@ class _SharedTableScreenState extends State<SharedTableScreen> {
             : <RestaurantTable>[];
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Table Reservations'),
+      appBar: AppTheme.gradientAppBar(
+        title: 'Table Reservations',
         actions: [
-          // Allow users to change sharing preference anytime
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: _changeSharingPreference,

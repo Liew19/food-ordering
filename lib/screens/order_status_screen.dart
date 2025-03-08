@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../state/order_provider.dart';
 import '../widgets/order_item_card.dart';
+import '../theme.dart';
 
 class OrderStatusScreen extends StatelessWidget {
   @override
@@ -10,8 +11,8 @@ class OrderStatusScreen extends StatelessWidget {
     final sortedOrders = orderProvider.getSortedOrders();
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Order Status'),
+      appBar: AppTheme.gradientAppBar(
+        title: 'Order Status',
         actions: [
           PopupMenuButton<OrderSortAlgorithm>(
             icon: Icon(Icons.sort),

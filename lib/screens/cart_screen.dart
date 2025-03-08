@@ -11,11 +11,8 @@ class CartScreen extends StatelessWidget {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Shopping cart',
-          style: Theme.of(context).appBarTheme.titleTextStyle,
-        ),
+      appBar: AppTheme.gradientAppBar(
+        title: 'Shopping cart',
         actions: [
           IconButton(
             icon: const Icon(Icons.delete_outline),

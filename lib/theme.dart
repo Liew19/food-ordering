@@ -11,7 +11,7 @@ class AppTheme {
   static const Color backgroundLightColor = Colors.white; // White
 
   // Text colors
-  static const Color textDarkColor = Colors.white; // White text
+  static const Color textDarkColor = Color.fromARGB(255, 0, 0, 0); // White text
   static const Color textLightColor = Color(0xFF212121); // Dark gray text
   static const Color textMutedColor = Color(0xFFBDBDBD); // Light gray text
 
@@ -26,7 +26,7 @@ class AppTheme {
   // Button styles
   static final ButtonStyle primaryButtonStyle = ElevatedButton.styleFrom(
     backgroundColor: primaryColor,
-    foregroundColor: textDarkColor,
+    foregroundColor: const Color.fromARGB(255, 255, 255, 255),
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     padding: const EdgeInsets.symmetric(vertical: 16),
     elevation: 5,
@@ -146,27 +146,27 @@ class AppTheme {
       ),
       scaffoldBackgroundColor: Colors.white,
       appBarTheme: const AppBarTheme(
-        backgroundColor: primaryColor,
+        backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: IconThemeData(color: Colors.white),
+        iconTheme: IconThemeData(color: textDarkColor),
         titleTextStyle: TextStyle(
-          color: Colors.white,
+          color: textDarkColor,
           fontSize: 22,
           fontWeight: FontWeight.bold,
         ),
       ),
       textTheme: const TextTheme(
         titleLarge: TextStyle(
-          color: textLightColor,
+          color: textDarkColor,
           fontSize: 24,
           fontWeight: FontWeight.bold,
         ),
         titleMedium: TextStyle(
-          color: textLightColor,
+          color: textDarkColor,
           fontSize: 16,
           fontWeight: FontWeight.w500,
         ),
-        bodyLarge: TextStyle(color: textLightColor, fontSize: 16),
+        bodyLarge: TextStyle(color: textDarkColor, fontSize: 16),
         bodyMedium: TextStyle(color: Colors.grey, fontSize: 14),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(style: primaryButtonStyle),
@@ -224,6 +224,26 @@ class AppTheme {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  // Helper method: Create gradient app bar
+  static PreferredSizeWidget gradientAppBar({
+    required String title,
+    List<Widget>? actions,
+    PreferredSizeWidget? bottom,
+    double? toolbarHeight,
+    bool automaticallyImplyLeading = true,
+  }) {
+    return AppBar(
+      title: Text(title),
+      actions: actions,
+      bottom: bottom,
+      toolbarHeight: toolbarHeight,
+      automaticallyImplyLeading: automaticallyImplyLeading,
+      flexibleSpace: Container(
+        decoration: const BoxDecoration(gradient: primaryGradient),
       ),
     );
   }
