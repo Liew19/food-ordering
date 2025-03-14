@@ -48,8 +48,8 @@ class CartScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
                   ElevatedButton(
+                    style: AppTheme.primaryButtonStyle,
                     onPressed: () {
-                      // Navigate back to the menu page
                       Navigator.of(context).pop();
                     },
                     child: const Text('Back to Menu'),
@@ -158,7 +158,6 @@ class CartScreen extends StatelessWidget {
   ) {
     // Force rebuild of image path
     String imagePath = cartItem.item.imagePath;
-    debugPrint('Loading image for ${cartItem.item.name}: $imagePath');
 
     return Image.asset(
       imagePath,
@@ -166,43 +165,14 @@ class CartScreen extends StatelessWidget {
       height: 80,
       fit: BoxFit.cover,
       errorBuilder: (context, error, stackTrace) {
-        debugPrint('Error loading image: $imagePath');
-        debugPrint('Item name: ${cartItem.item.name}');
-        debugPrint('Item category: ${cartItem.item.category}');
-        debugPrint('Error details: $error');
-
+        // Silently handle image loading errors
         return Container(
-          width: 80,
-          height: 80,
-          decoration: BoxDecoration(
-            color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                cartItem.item.category.toLowerCase() == 'beverage'
-                    ? Icons.local_drink
-                    : Icons.restaurant,
-                size: 24,
-                color: isDarkMode ? Colors.grey[600] : Colors.grey[400],
-              ),
-              const SizedBox(height: 4),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: Text(
-                  '${cartItem.item.category}\n${cartItem.item.name}',
-                  style: TextStyle(
-                    fontSize: 8,
-                    color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                  ),
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
+          width: 60,
+          height: 60,
+          color: isDarkMode ? Colors.grey[800] : Colors.grey[300],
+          child: Icon(
+            Icons.image_not_supported,
+            color: isDarkMode ? Colors.grey[600] : Colors.grey[400],
           ),
         );
       },

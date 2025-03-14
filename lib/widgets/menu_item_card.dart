@@ -89,40 +89,92 @@ class MenuItemCard extends StatelessWidget {
     bool isDesktop,
     bool isDarkMode,
   ) {
-    return Image.network(
-      item.imageUrl,
+    if (item.imageUrl.isNotEmpty) {
+      return Image.network(
+        item.imageUrl,
+        height: isDesktop ? 140 : 100,
+        width: double.infinity,
+        fit: BoxFit.cover,
+        // Add caching
+        cacheWidth: isDesktop ? 280 : 200,
+        cacheHeight: isDesktop ? 280 : 200,
+        // Add loading placeholder
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Container(
+            height: isDesktop ? 140 : 100,
+            width: double.infinity,
+            color: isDarkMode ? Colors.grey[800] : Colors.grey[300],
+            child: Center(
+              child: CircularProgressIndicator(
+                value:
+                    loadingProgress.expectedTotalBytes != null
+                        ? loadingProgress.cumulativeBytesLoaded /
+                            loadingProgress.expectedTotalBytes!
+                        : null,
+              ),
+            ),
+          );
+        },
+        errorBuilder: (context, error, stackTrace) {
+          // Fallback to local image if network image fails
+          return Image.asset(
+            item.imagePath,
+            height: isDesktop ? 140 : 100,
+            width: double.infinity,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return _buildErrorPlaceholder(context, isDesktop, isDarkMode);
+            },
+          );
+        },
+      );
+    }
+
+    // If no network image URL, try local image
+    return Image.asset(
+      item.imagePath,
       height: isDesktop ? 140 : 100,
       width: double.infinity,
       fit: BoxFit.cover,
       errorBuilder: (context, error, stackTrace) {
-        return Container(
-          height: isDesktop ? 140 : 100,
-          color: isDarkMode ? Colors.grey[800] : Colors.grey[300],
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.image_not_supported,
-                  size: isDesktop ? 40 : 30,
-                  color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Image Error!',
-                  style: TextStyle(
-                    fontSize: isDesktop ? 14 : 12,
-                    color:
-                        isDarkMode
-                            ? AppTheme.textDarkColor
-                            : AppTheme.textLightColor,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
+        return _buildErrorPlaceholder(context, isDesktop, isDarkMode);
       },
+    );
+  }
+
+  // Extract error placeholder as a separate method
+  Widget _buildErrorPlaceholder(
+    BuildContext context,
+    bool isDesktop,
+    bool isDarkMode,
+  ) {
+    return Container(
+      height: isDesktop ? 140 : 100,
+      color: isDarkMode ? Colors.grey[800] : Colors.grey[300],
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.image_not_supported,
+              size: isDesktop ? 40 : 30,
+              color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Image Error!',
+              style: TextStyle(
+                fontSize: isDesktop ? 14 : 12,
+                color:
+                    isDarkMode
+                        ? AppTheme.textDarkColor
+                        : AppTheme.textLightColor,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -179,25 +231,21 @@ class MenuItemCard extends StatelessWidget {
       child: ElevatedButton(
         onPressed: () => _addToCart(context),
         // ElevatedButton theme customization
-        style: ElevatedButton.styleFrom(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+        style: AppTheme.primaryButtonStyle.copyWith(
+          shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           ),
-          padding: EdgeInsets.zero,
+          foregroundColor: MaterialStateProperty.all<Color>(Colors.white),
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.add_shopping_cart,
-              size: isDesktop ? 18 : 16,
+        child: Transform.translate(
+          offset: const Offset(0, -1), // Shift up by 1 pixel unit
+          child: Center(
+            child: Icon(
+              Icons.shopping_cart,
+              size: isDesktop ? 20 : 18,
               color: Colors.white,
             ),
-            if (isDesktop) ...[
-              const SizedBox(width: 4),
-              const Text('Add to Cart', style: TextStyle(fontSize: 12)),
-            ],
-          ],
+          ),
         ),
       ),
     );

@@ -1,13 +1,28 @@
+import 'package:hive/hive.dart';
+
+part 'menu_item.g.dart';
+
+@HiveType(typeId: 1)
 class MenuItem {
+  @HiveField(0)
   final String id;
+  @HiveField(1)
   final String name;
+  @HiveField(2)
   final double price;
+  @HiveField(3)
   final String category;
+  @HiveField(4)
   final String itemId;
+  @HiveField(5)
   final String imageUrl;
+  @HiveField(6)
   final String? description;
+  @HiveField(7)
   final double? rating;
+  @HiveField(8)
   final bool isPopular;
+  @HiveField(9)
   final double preparationTime;
 
   MenuItem({

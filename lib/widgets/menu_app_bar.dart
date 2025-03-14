@@ -15,14 +15,17 @@ class MenuAppBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SliverAppBar(
-      expandedHeight: 120,
+      expandedHeight: 100,
       floating: true,
       pinned: true,
-      elevation: 8, // Increased for better shadow effect
-      backgroundColor: Colors.transparent, // Transparent to show gradient
+      elevation: 8,
+      backgroundColor:
+          Theme.of(
+            context,
+          ).primaryColor, // Use theme primary color instead of transparent
       flexibleSpace: Container(
         decoration: BoxDecoration(
-          gradient: AppTheme.primaryGradient, // Use theme gradient
+          gradient: AppTheme.primaryGradient,
           boxShadow: [
             BoxShadow(
               color: AppTheme.shadowColor,

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:fyp/state/theme_provider.dart';
 import 'package:fyp/theme_mode/light_bulb.dart';
+import 'package:provider/provider.dart';
 
 class NightModeDemo extends StatefulWidget {
   const NightModeDemo({super.key});
@@ -11,9 +13,22 @@ class NightModeDemo extends StatefulWidget {
 class _DemoState extends State<NightModeDemo> {
   bool isDarkMode = true;
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+      setState(() {
+        isDarkMode = themeProvider.isDarkMode;
+      });
+    });
+  }
+
   void _handleThemeChange(bool isLightMode) {
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
     setState(() {
       isDarkMode = !isLightMode;
+      themeProvider.toggleTheme();
     });
   }
 

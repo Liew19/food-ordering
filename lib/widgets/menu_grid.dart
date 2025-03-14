@@ -12,39 +12,46 @@ class MenuGrid extends StatelessWidget {
     required this.onItemTap,
   }) : super(key: key);
 
-  int _calculateCrossAxisCount(BuildContext context) {
-    double width = MediaQuery.of(context).size.width;
-    if (width > 1200) {
-      return 5;
-    } else if (width > 900) {
-      return 4;
-    } else if (width > 600) {
-      return 3;
-    } else {
-      return 2;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(12.0),
-      child: GridView.builder(
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: _calculateCrossAxisCount(context),
-          childAspectRatio: 0.8,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-        ),
-        itemCount: filteredItems.length,
-        itemBuilder: (context, index) {
-          final item = filteredItems[index];
-          return MenuItemCard(
-            item: item,
-            onTap: () => onItemTap(item),
-          );
-        },
+    // Get screen width
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    // Calculate number of columns and aspect ratio based on screen width
+    int crossAxisCount;
+    double childAspectRatio;
+
+    if (screenWidth > 1200) {
+      crossAxisCount = 4; // Large screens: 4 columns
+      childAspectRatio = 1;
+    } else if (screenWidth > 900) {
+      crossAxisCount = 3; // Medium screens: 3 columns
+      childAspectRatio = 1;
+    } else if (screenWidth > 600) {
+      crossAxisCount = 2; // Small screens: 2 columns
+      childAspectRatio = 1;
+    } else {
+      crossAxisCount = 2; // Very small screens: 1 column
+      childAspectRatio = 0.8;
+    }
+
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.all(16),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: crossAxisCount,
+        childAspectRatio: childAspectRatio,
+        crossAxisSpacing: 16,
+        mainAxisSpacing: 16,
       ),
+      itemCount: filteredItems.length,
+      itemBuilder: (context, index) {
+        return MenuItemCard(
+          item: filteredItems[index],
+          onTap: () => onItemTap(filteredItems[index]),
+        );
+      },
     );
   }
 }

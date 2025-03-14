@@ -16,7 +16,7 @@ class MenuItemDetailDialog extends StatelessWidget {
     final screenSize = MediaQuery.of(context).size;
 
     return Dialog(
-      backgroundColor: Colors.transparent,
+      backgroundColor: isDarkMode ? const Color(0xFF333333) : Colors.white,
       insetPadding: EdgeInsets.symmetric(
         horizontal: isDesktop ? 40.0 : 20.0,
         vertical: isDesktop ? 80.0 : 40.0,
@@ -27,7 +27,7 @@ class MenuItemDetailDialog extends StatelessWidget {
           maxHeight: screenSize.height * 0.8,
         ),
         decoration: BoxDecoration(
-          color: isDarkMode ? AppTheme.cardColor : Colors.white,
+          color: isDarkMode ? const Color(0xFF333333) : Colors.white,
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
@@ -238,51 +238,64 @@ class MenuItemDetailDialog extends StatelessWidget {
                                   color: Theme.of(context).primaryColor,
                                 ),
                               ),
-                              ElevatedButton.icon(
-                                onPressed: () {
-                                  Provider.of<CartProvider>(
-                                    context,
-                                    listen: false,
-                                  ).addToCart(item);
+                              SizedBox(
+                                width: isDesktop ? 200 : 160,
+                                child: ElevatedButton.icon(
+                                  onPressed: () {
+                                    Provider.of<CartProvider>(
+                                      context,
+                                      listen: false,
+                                    ).addToCart(item);
 
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        'Added ${item.name} to cart!',
-                                        style: TextStyle(
-                                          color:
-                                              Theme.of(context).brightness ==
-                                                      Brightness.dark
-                                                  ? Colors.white
-                                                  : Colors.black,
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          'Added ${item.name} to cart!',
+                                          style: TextStyle(
+                                            color:
+                                                Theme.of(context).brightness ==
+                                                        Brightness.dark
+                                                    ? Colors.white
+                                                    : Colors.black,
+                                          ),
+                                        ),
+                                        backgroundColor:
+                                            Theme.of(context).brightness ==
+                                                    Brightness.dark
+                                                ? Colors.grey[800]
+                                                : Colors.white,
+                                        duration: const Duration(seconds: 1),
+                                        behavior: SnackBarBehavior.floating,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            10.0,
+                                          ),
                                         ),
                                       ),
-                                      backgroundColor:
-                                          Theme.of(context).brightness ==
-                                                  Brightness.dark
-                                              ? Colors.grey[800]
-                                              : Colors.white,
-                                      duration: const Duration(seconds: 1),
-                                      behavior: SnackBarBehavior.floating,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(
-                                          10.0,
-                                        ),
+                                    );
+
+                                    Navigator.of(context).pop();
+                                  },
+                                  icon: Transform.translate(
+                                    offset: const Offset(0, -1),
+                                    child: Icon(
+                                      Icons.shopping_cart,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  label: const Text('Add to Cart'),
+                                  style: AppTheme.primaryButtonStyle.copyWith(
+                                    shape: MaterialStateProperty.all<
+                                      RoundedRectangleBorder
+                                    >(
+                                      RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(20),
                                       ),
                                     ),
-                                  );
-
-                                  Navigator.of(context).pop();
-                                },
-                                icon: const Icon(Icons.add_shopping_cart),
-                                label: const Text('Add to Cart'),
-                                style: ElevatedButton.styleFrom(
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 10,
+                                    foregroundColor:
+                                        MaterialStateProperty.all<Color>(
+                                          Colors.white,
+                                        ),
                                   ),
                                 ),
                               ),

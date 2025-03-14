@@ -12,48 +12,29 @@ class TableService {
   }
 
   // Create a table sharing request
-  Future<Map<String, dynamic>> createTableSharing({
-    required int tableId,
-    required String requesterName,
-    required int partySize,
-  }) async {
+  Future<void> createTableSharing(int tableNumber) async {
     try {
-      // Simulate API call
-      return await _simulateServerRequest(
-        delay: Duration(milliseconds: 500),
-        response: {'success': true},
-      );
+      // Implementation
     } catch (e) {
-      print('Error creating table sharing: $e');
-      return {'success': false, 'error': 'Creating table sharing failed'};
+      throw Exception('Failed to create table sharing');
     }
   }
 
   // Accept a table sharing request
-  Future<Map<String, dynamic>> acceptTableSharing(int requestId) async {
+  Future<void> acceptTableSharing(int tableNumber) async {
     try {
-      // Simulate API call
-      return await _simulateServerRequest(
-        delay: Duration(milliseconds: 500),
-        response: {'success': true},
-      );
+      // Implementation
     } catch (e) {
-      print('Error accepting table sharing: $e');
-      return {'success': false, 'error': 'Accepting table sharing failed'};
+      throw Exception('Failed to accept table sharing');
     }
   }
 
   // Reject a table sharing request
-  Future<Map<String, dynamic>> rejectTableSharing(int requestId) async {
+  Future<void> rejectTableSharing(int tableNumber) async {
     try {
-      // Simulate API call
-      return await _simulateServerRequest(
-        delay: Duration(milliseconds: 500),
-        response: {'success': true},
-      );
+      // Implementation
     } catch (e) {
-      print('Error rejecting table sharing: $e');
-      return {'success': false, 'error': 'Declining table sharing failed'};
+      throw Exception('Failed to reject table sharing');
     }
   }
 }

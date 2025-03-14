@@ -8,6 +8,7 @@ class ApiService {
   final HiveService _hiveService;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   bool _initialized = false;
+  bool _isUpdating = false;
 
   ApiService({HiveService? hiveService})
     : _hiveService = hiveService ?? HiveService();
@@ -20,40 +21,81 @@ class ApiService {
     }
   }
 
-  // Get menu items from Firestore
+  // Get menu items with optimized caching
   Future<List<MenuItem>> getMenuItems() async {
     await _ensureInitialized();
+
     try {
-      final querySnapshot = await _firestore.collection('menu').get();
-      final List<MenuItem> menuItems =
-          querySnapshot.docs.map((doc) {
-            final data = doc.data();
-            return MenuItem(
-              id: doc.id,
-              name: data['name'],
-              price: data['price'],
-              category: data['category'],
-              itemId: data['itemId'],
-              imageUrl: data['imageUrl'],
-              description: data['description'],
-              rating: data['rating'],
-              isPopular: data['isPopular'],
-              preparationTime: data['preparationTime'],
-            );
-          }).toList();
+      // Always try to get cached data first
+      if (_hiveService.hasMenuCache()) {
+        final cachedItems = _hiveService.getCachedMenuItems();
+        // Only update cache if not already updating
+        if (!_isUpdating) {
+          _updateCacheInBackground();
+        }
+        return cachedItems;
+      }
 
-      // Save menu items to Hive cache
-      await _hiveService.cacheMenuItems(menuItems);
-
-      return menuItems;
+      // If no cache, fetch from Firestore with timeout
+      return await _fetchFromFirestore().timeout(
+        const Duration(seconds: 5),
+        onTimeout: () {
+          // Return empty list on timeout
+          return [];
+        },
+      );
     } catch (e) {
-      // If there's an error, return cached data if available
+      // If there's an error and we have cache, return cached data
       if (_hiveService.hasMenuCache()) {
         return _hiveService.getCachedMenuItems();
-      } else {
-        // If no cached data, throw an exception
-        throw Exception('Failed to load menu items: ${e.toString()}');
       }
+      // Return empty list instead of throwing
+      return [];
+    }
+  }
+
+  // Fetch data from Firestore and update cache
+  Future<List<MenuItem>> _fetchFromFirestore() async {
+    final querySnapshot = await _firestore.collection('menu').get();
+    final List<MenuItem> menuItems =
+        querySnapshot.docs.map((doc) {
+          final data = doc.data();
+          return MenuItem(
+            id: doc.id,
+            name: data['name'],
+            price:
+                (data['price'] is int)
+                    ? (data['price'] as int).toDouble()
+                    : data['price'],
+            category: data['category'],
+            itemId: data['itemId'],
+            imageUrl: data['imageUrl'],
+            description: data['description'],
+            rating: data['rating'],
+            isPopular: data['isPopular'],
+            preparationTime:
+                (data['preparationTime'] is int)
+                    ? (data['preparationTime'] as int).toDouble()
+                    : data['preparationTime'],
+          );
+        }).toList();
+
+    // Update cache with new data
+    await _hiveService.cacheMenuItems(menuItems);
+    return menuItems;
+  }
+
+  // Update cache in background without blocking UI
+  Future<void> _updateCacheInBackground() async {
+    if (_isUpdating) return;
+
+    _isUpdating = true;
+    try {
+      await _fetchFromFirestore();
+    } catch (e) {
+      // Silently handle background cache update failure
+    } finally {
+      _isUpdating = false;
     }
   }
 }
