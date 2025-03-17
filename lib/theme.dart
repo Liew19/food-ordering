@@ -2,9 +2,14 @@ import 'package:flutter/material.dart';
 
 class AppTheme {
   // Main color palette
-  static const Color primaryColor = Color(0xFFFF9800); // Orange
+  static const Color primaryColor = Color.fromARGB(255, 12, 7, 0); // Orange
   static const Color primaryDarkColor = Color(0xFFFF5722); // Dark orange
-  static const Color accentColor = Color(0xFFFF5722); // Accent color
+  static const Color accentColor = Color.fromARGB(
+    255,
+    28,
+    9,
+    3,
+  ); // Accent color
 
   // Background colors
   static const Color backgroundColor = Color(0xFF212121); // Dark gray
