@@ -3,7 +3,6 @@
 /// Implements the state transition logic and persistence
 
 import 'package:flutter/foundation.dart';
-import 'package:provider/provider.dart';
 import '../models/shared_table.dart';
 import '../services/shared_table_service.dart';
 

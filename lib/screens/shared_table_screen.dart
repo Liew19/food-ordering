@@ -5,14 +5,13 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../models/shared_table.dart';
 import '../state/table_state.dart';
 import '../widgets/sharing_card.dart';
 import '../widgets/start_sharing_dialog.dart';
 import '../theme.dart';
 
 class SharedTableScreen extends StatelessWidget {
-  const SharedTableScreen({Key? key}) : super(key: key);
+  const SharedTableScreen({super.key});
 
   void _showStartSharingDialog(BuildContext context) {
     showDialog(

@@ -2,31 +2,31 @@ import 'package:flutter/material.dart';
 
 class AppTheme {
   // Main color palette
-  static const Color primaryColor = Color(0xFFFF9800); // Orange
-  static const Color primaryDarkColor = Color(0xFFFF5722); // Dark orange
-  static const Color accentColor = Color(0xFFFF5722); // Accent color
+  static const Color primaryColor = Color(0xFFE53935); // Red
+  static const Color primaryDarkColor = Color(0xFFC62828); // Dark red
+  static const Color accentColor = Color(0xFFE53935); // Red accent
 
   // Background colors
-  static const Color backgroundColor = Color(0xFF212121); // Dark gray
+  static const Color backgroundColor = Colors.white; // White
   static const Color backgroundLightColor = Colors.white; // White
 
   // Text colors
-  static const Color textDarkColor = Color.fromARGB(255, 0, 0, 0); // White text
-  static const Color textLightColor = Color(0xFF212121); // Dark gray text
-  static const Color textMutedColor = Color(0xFFBDBDBD); // Light gray text
+  static const Color textDarkColor = Color(0xFFE53935); // Red text
+  static const Color textLightColor = Color(0xFFE53935); // Red text
+  static const Color textMutedColor = Color(0xFFEF9A9A); // Light red text
 
   // Shadow colors
   static final Color shadowColor = primaryColor.withOpacity(0.4);
-  static final Color darkShadowColor = Colors.black.withOpacity(0.2);
+  static final Color darkShadowColor = Colors.black.withOpacity(0.1);
 
   // Card colors
-  static final Color cardColor = Colors.white.withOpacity(0.05);
+  static final Color cardColor = Colors.white;
   static const Color cardLightColor = Colors.white;
 
   // Button styles
   static final ButtonStyle primaryButtonStyle = ElevatedButton.styleFrom(
     backgroundColor: primaryColor,
-    foregroundColor: const Color.fromARGB(255, 255, 255, 255),
+    foregroundColor: Colors.white,
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     padding: const EdgeInsets.symmetric(vertical: 16),
     elevation: 5,
@@ -41,7 +41,7 @@ class AppTheme {
   static const LinearGradient backgroundGradient = LinearGradient(
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
-    colors: [Colors.white, Color(0xFF212121)],
+    colors: [Colors.white, Colors.white],
   );
 
   // Application theme

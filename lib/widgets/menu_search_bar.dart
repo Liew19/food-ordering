@@ -12,43 +12,26 @@ class MenuSearchBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
+    return Container(
+      height: 36,
+      decoration: BoxDecoration(
+        color: Colors.grey[100],
+        borderRadius: BorderRadius.circular(18),
+      ),
       child: TextField(
         controller: controller,
-        decoration: InputDecoration(
-          hintText: 'Search Menu Item...',
-          prefixIcon: const Icon(Icons.search),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(
-              color: Theme.of(context).primaryColor.withOpacity(0.5),
-            ),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(
-              color: Theme.of(context).primaryColor.withOpacity(0.5),
-            ),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(
-              color: Theme.of(context).primaryColor,
-              width: 2.0,
-            ),
-          ),
-          contentPadding: const EdgeInsets.symmetric(
-            vertical: 12,
-            horizontal: 16,
-          ),
-          filled: true,
-          fillColor:
-              Theme.of(context).brightness == Brightness.dark
-                  ? Colors.grey[800]
-                  : Colors.grey[100],
-        ),
         onChanged: onSearchChanged,
+        style: const TextStyle(fontSize: 14),
+        textAlignVertical: TextAlignVertical.center,
+        decoration: const InputDecoration(
+          hintText: 'Search...',
+          hintStyle: TextStyle(color: Colors.black38, fontSize: 14),
+          prefixIcon: Icon(Icons.search, color: Colors.black38, size: 20),
+          prefixIconConstraints: BoxConstraints(minWidth: 36, minHeight: 36),
+          border: InputBorder.none,
+          isDense: true,
+          contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+        ),
       ),
     );
   }

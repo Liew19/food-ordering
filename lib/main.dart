@@ -3,7 +3,7 @@ import 'package:fyp/screens/cart_screen.dart';
 import 'package:fyp/screens/home_screen.dart';
 import 'package:fyp/screens/kitchen_screen.dart';
 import 'package:fyp/screens/order_status_screen.dart';
-import 'package:fyp/screens/shared_table_screen.dart';
+// import 'package:fyp/screens/shared_table_screen.dart'; // Temporarily commented out
 import 'package:fyp/screens/staff_screen.dart';
 import 'package:fyp/theme.dart';
 import 'package:provider/provider.dart';
@@ -91,6 +91,7 @@ class MyApp extends StatelessWidget {
                   themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
               debugShowCheckedModeBanner: false,
               home: MainScreen(),
+              routes: {'/cart': (context) => MainScreen(initialIndex: 1)},
             ),
       ),
     );
@@ -98,18 +99,28 @@ class MyApp extends StatelessWidget {
 }
 
 class MainScreen extends StatefulWidget {
+  final int initialIndex;
+
+  const MainScreen({Key? key, this.initialIndex = 0}) : super(key: key);
+
   @override
-  _MainScreenState createState() => _MainScreenState();
+  MainScreenState createState() => MainScreenState();
 }
 
-class _MainScreenState extends State<MainScreen> {
-  int _selectedIndex = 0;
+class MainScreenState extends State<MainScreen> {
+  late int _selectedIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedIndex = widget.initialIndex;
+  }
 
   static final List<Widget> _screens = [
     HomeScreen(),
     CartScreen(),
     OrderStatusScreen(),
-    SharedTableScreen(),
+    // SharedTableScreen(), // Temporarily commented out
     KitchenScreen(),
     StaffScreen(),
   ];
@@ -136,10 +147,10 @@ class _MainScreenState extends State<MainScreen> {
             label: 'Cart',
           ),
           BottomNavigationBarItem(icon: Icon(Icons.receipt), label: 'Orders'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.people),
-            label: 'Share Table',
-          ),
+          // BottomNavigationBarItem(
+          //   icon: Icon(Icons.people),
+          //   label: 'Share Table',
+          // ),
           BottomNavigationBarItem(icon: Icon(Icons.kitchen), label: 'Kitchen'),
           BottomNavigationBarItem(icon: Icon(Icons.badge), label: 'Staff'),
         ],

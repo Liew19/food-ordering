@@ -36,44 +36,34 @@ class MenuItem {
 
 // Priority calculation function
 double calculatePriority(Order order, List<MenuItem> menuItems) {
-  // Get preparation time priority (40% weight)
-  final preparationTimePriority =
-      calculatePreparationTimePriority(order, menuItems) * 0.4;
+  // 更合理的权重分配
+  const weightPreparation = 0.4;
+  const weightType = 0.2;
+  const weightAmount = 0.2;
+  const weightWait = 0.2;
 
-  // Get order type priority (30% weight)
-  final orderTypePriority = (order.type == 'takeout' ? 3 : 2) * 0.3;
+  final preparation =
+      calculatePreparationTimePriority(order, menuItems) * weightPreparation;
+  final type = (order.type == 'takeout' ? 3 : 2) * weightType;
+  final amount = calculateAmountPriority(order.totalAmount) * weightAmount;
+  final wait = calculateWaitTimePriority(order.createdAt) * weightWait;
 
-  // Get amount priority (20% weight)
-  final amountPriority = calculateAmountPriority(order.totalAmount) * 0.2;
-
-  // Get wait time priority (10% weight)
-  final waitTimePriority = calculateWaitTimePriority(order.createdAt) * 0.1;
-
-  return preparationTimePriority +
-      orderTypePriority +
-      amountPriority +
-      waitTimePriority;
+  return preparation + type + amount + wait;
 }
 
 int calculatePreparationTimePriority(Order order, List<MenuItem> menuItems) {
-  final orderItems =
-      order.items.map((item) {
-        final menuItem = menuItems.firstWhere(
-          (mi) => mi.id == item.menuItemId,
-          orElse:
-              () => MenuItem(id: '', name: '', price: 0, preparationTime: 0),
-        );
-        return menuItem.preparationTime;
-      }).toList();
+  // 计算总准备时间
+  final totalPrepTime = order.items.fold(0, (sum, item) {
+    final menuItem = menuItems.firstWhere(
+      (mi) => mi.id == item.menuItemId,
+      orElse: () => throw Exception('MenuItem ${item.menuItemId} not found'),
+    );
+    return sum + menuItem.preparationTime * item.quantity;
+  });
 
-  final maxPrepTime =
-      orderItems.isEmpty
-          ? 0
-          : orderItems.reduce((max, value) => max > value ? max : value);
-
-  if (maxPrepTime <= 10) return 3; // Quick preparation
-  if (maxPrepTime <= 20) return 2; // Standard preparation
-  return 1; // Long preparation
+  if (totalPrepTime <= 10) return 3;
+  if (totalPrepTime <= 30) return 2;
+  return 1;
 }
 
 int calculateAmountPriority(double amount) {

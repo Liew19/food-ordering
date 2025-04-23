@@ -9,10 +9,10 @@ class SpecialMenuCarousel extends StatefulWidget {
   final Function(MenuItem) onItemTap;
 
   const SpecialMenuCarousel({
-    Key? key,
+    super.key,
     required this.specialMenus,
     required this.onItemTap,
-  }) : super(key: key);
+  });
 
   @override
   State<SpecialMenuCarousel> createState() => _SpecialMenuCarouselState();
@@ -29,7 +29,7 @@ class _SpecialMenuCarouselState extends State<SpecialMenuCarousel>
   @override
   void initState() {
     super.initState();
-    _pageController = PageController(initialPage: 0, viewportFraction: 0.85);
+    _pageController = PageController(initialPage: 0, viewportFraction: 0.92);
     _scaleController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 300),
@@ -92,21 +92,21 @@ class _SpecialMenuCarouselState extends State<SpecialMenuCarousel>
         onTap: () => widget.onItemTap(menu),
         child: Container(
           margin: EdgeInsets.symmetric(
-            horizontal: constraints.maxWidth > 600 ? 15 : 10,
+            horizontal: constraints.maxWidth > 600 ? 25 : 15,
             vertical: 10,
           ),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(20), // Reduced border radius
             boxShadow: [
               BoxShadow(
                 color: AppTheme.shadowColor.withOpacity(0.2),
-                blurRadius: 10,
-                offset: const Offset(0, 5),
+                blurRadius: 15,
+                offset: const Offset(0, 8),
               ),
             ],
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(20), // Reduced border radius
             child: Stack(
               fit: StackFit.expand,
               children: [
@@ -120,13 +120,13 @@ class _SpecialMenuCarouselState extends State<SpecialMenuCarousel>
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.error_outline, size: 32),
+                          const Icon(Icons.error_outline, size: 40),
                           const SizedBox(height: 8),
                           Text(
                             'Image not found',
                             style: TextStyle(
                               color: Colors.grey[600],
-                              fontSize: 12,
+                              fontSize: 14,
                             ),
                           ),
                         ],
@@ -142,23 +142,33 @@ class _SpecialMenuCarouselState extends State<SpecialMenuCarousel>
                       end: Alignment.bottomCenter,
                       colors: [
                         Colors.transparent,
-                        Colors.black.withOpacity(0.7),
+                        Colors.black.withOpacity(0.8),
                       ],
+                      stops: const [0.5, 1.0],
                     ),
                   ),
                 ),
                 // Feature badge
                 Positioned(
-                  top: 16,
-                  right: 16,
+                  top: 15,
+                  right: 15,
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 12,
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryColor,
-                      borderRadius: BorderRadius.circular(20),
+                      color: const Color(
+                        0xFFE53935,
+                      ), // Changed from blue to red
+                      borderRadius: BorderRadius.circular(25),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -167,7 +177,7 @@ class _SpecialMenuCarouselState extends State<SpecialMenuCarousel>
                           menu.price >= 30 ? '🔥 Featured' : '🌟 Recommended',
                           style: const TextStyle(
                             color: Colors.white,
-                            fontSize: 12,
+                            fontSize: 14,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -177,9 +187,9 @@ class _SpecialMenuCarouselState extends State<SpecialMenuCarousel>
                 ),
                 // Menu item information
                 Positioned(
-                  left: 16,
-                  right: 16,
-                  bottom: 16,
+                  left: 15,
+                  right: 15,
+                  bottom: 15,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
@@ -188,24 +198,31 @@ class _SpecialMenuCarouselState extends State<SpecialMenuCarousel>
                         menu.name,
                         style: const TextStyle(
                           color: Colors.white,
-                          fontSize: 20,
+                          fontSize: 22,
                           fontWeight: FontWeight.bold,
                           shadows: [
                             Shadow(
-                              offset: Offset(0, 1),
-                              blurRadius: 3.0,
+                              offset: Offset(0, 2),
+                              blurRadius: 4.0,
                               color: Colors.black,
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 8),
                       Text(
                         'RM ${menu.price.toStringAsFixed(2)}',
                         style: TextStyle(
                           color: Colors.white.withOpacity(0.9),
-                          fontSize: 16,
+                          fontSize: 18,
                           fontWeight: FontWeight.w500,
+                          shadows: [
+                            Shadow(
+                              offset: const Offset(0, 1),
+                              blurRadius: 2.0,
+                              color: Colors.black.withOpacity(0.5),
+                            ),
+                          ],
                         ),
                       ),
                     ],
@@ -226,7 +243,7 @@ class _SpecialMenuCarouselState extends State<SpecialMenuCarousel>
     return LayoutBuilder(
       builder: (context, constraints) {
         final isDesktop = constraints.maxWidth > 600;
-        final carouselHeight = isDesktop ? 220.0 : 180.0;
+        final carouselHeight = isDesktop ? 240.0 : 200.0; // Increased height
 
         return Column(
           children: [
@@ -274,7 +291,7 @@ class _SpecialMenuCarouselState extends State<SpecialMenuCarousel>
                                 curve: Curves.easeInOutCubic,
                               );
                             },
-                            color: Colors.white,
+                            color: Colors.red,
                           ),
                         ),
                       ),
@@ -291,7 +308,7 @@ class _SpecialMenuCarouselState extends State<SpecialMenuCarousel>
                                 curve: Curves.easeInOutCubic,
                               );
                             },
-                            color: Colors.white,
+                            color: Colors.red,
                           ),
                         ),
                       ),
@@ -308,7 +325,7 @@ class _SpecialMenuCarouselState extends State<SpecialMenuCarousel>
                 effect: ExpandingDotsEffect(
                   dotHeight: 8,
                   dotWidth: 8,
-                  activeDotColor: AppTheme.primaryColor,
+                  activeDotColor: const Color(0xFFE53935),
                   dotColor: Colors.grey.withOpacity(0.5),
                 ),
               ),

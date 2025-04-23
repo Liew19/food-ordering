@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:fyp/theme.dart';
-import '../theme_mode/light_bulb.dart';
 
 class AdvancedMenuAppBar extends StatelessWidget {
   final bool isDarkMode;
@@ -130,13 +129,7 @@ class AdvancedMenuAppBar extends StatelessWidget {
             ),
             margin: const EdgeInsets.symmetric(vertical: 8),
             padding: const EdgeInsets.all(4),
-            child: Material(
-              color: Colors.transparent,
-              child: ThemeLightBulb(
-                onThemeChanged: onThemeChanged,
-                initialState: isDarkMode,
-              ),
-            ),
+            child: Material(color: Colors.transparent),
           ),
         );
       },
