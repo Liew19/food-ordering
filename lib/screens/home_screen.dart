@@ -37,7 +37,8 @@ class _HomeScreenState extends State<HomeScreen> {
         setState(() {
           _allMenuItems = items;
           _categories = items.map((item) => item.category).toSet().toList();
-          selectedCategory = _categories.isNotEmpty ? _categories.first : null;
+          _categories.insert(0, "All");
+          selectedCategory = "All";
           filteredItems = items;
           _isLoading = false;
         });
@@ -66,7 +67,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 query.isEmpty ||
                 item.name.toLowerCase().contains(query.toLowerCase());
             bool matchesCategory =
-                selectedCategory == null || item.category == selectedCategory;
+                selectedCategory == null ||
+                selectedCategory == "All" ||
+                item.category == selectedCategory;
             return matchesSearch && matchesCategory;
           }).toList();
     });
@@ -75,7 +78,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void showMenuItemDetails(BuildContext context, MenuItem item) {
     showDialog(
       context: context,
-      barrierColor: Colors.black.withOpacity(0.8),
+      barrierColor: Colors.black.withAlpha(204),
       builder: (context) => MenuItemDetailDialog(item: item),
     );
   }
