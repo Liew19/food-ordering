@@ -39,7 +39,11 @@ class _SpecialMenuCarouselState extends State<SpecialMenuCarousel>
 
   @override
   void dispose() {
-    _stopAutoPlay();
+    // 确保在组件被卸载前取消计时器
+    _autoPlayTimer?.cancel();
+    _autoPlayTimer = null;
+
+    // 确保在组件被卸载前处置控制器
     _pageController.dispose();
     _scaleController.dispose();
     super.dispose();
@@ -50,11 +54,14 @@ class _SpecialMenuCarouselState extends State<SpecialMenuCarousel>
     _autoPlayTimer = Timer.periodic(const Duration(seconds: 5), (_) {
       if (!_isUserInteracting && mounted && widget.specialMenus.length > 1) {
         final nextPage = (_currentIndex + 1) % widget.specialMenus.length;
-        _pageController.animateToPage(
-          nextPage,
-          duration: const Duration(milliseconds: 500),
-          curve: Curves.easeInOutCubic,
-        );
+        // 检查 PageController 是否已附加到滚动视图
+        if (mounted && _pageController.hasClients) {
+          _pageController.animateToPage(
+            nextPage,
+            duration: const Duration(milliseconds: 500),
+            curve: Curves.easeInOutCubic,
+          );
+        }
       }
     });
   }

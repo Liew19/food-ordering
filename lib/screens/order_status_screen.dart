@@ -47,34 +47,6 @@ class OrderStatusScreen extends StatelessWidget {
                         BuildContext context,
                       ) => <PopupMenuEntry<OrderSortAlgorithm>>[
                         PopupMenuItem<OrderSortAlgorithm>(
-                          value: OrderSortAlgorithm.priority,
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.priority_high,
-                                color:
-                                    orderProvider.currentAlgorithm ==
-                                            OrderSortAlgorithm.priority
-                                        ? Theme.of(context).primaryColor
-                                        : null,
-                                size: 20,
-                              ),
-                              const SizedBox(width: 8),
-                              const Flexible(
-                                child: Text('Basic Priority Algorithm'),
-                              ),
-                              if (orderProvider.currentAlgorithm ==
-                                  OrderSortAlgorithm.priority)
-                                Icon(
-                                  Icons.check,
-                                  color: Theme.of(context).primaryColor,
-                                  size: 20,
-                                ),
-                            ],
-                          ),
-                        ),
-                        PopupMenuItem<OrderSortAlgorithm>(
                           value: OrderSortAlgorithm.advancedPriority,
                           child: Row(
                             mainAxisSize: MainAxisSize.min,

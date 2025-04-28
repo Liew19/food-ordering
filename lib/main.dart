@@ -91,7 +91,10 @@ class MyApp extends StatelessWidget {
                   themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
               debugShowCheckedModeBanner: false,
               home: MainScreen(),
-              routes: {'/cart': (context) => MainScreen(initialIndex: 1)},
+              routes: {
+                '/cart': (context) => MainScreen(initialIndex: 1),
+                '/order-status': (context) => MainScreen(initialIndex: 2),
+              },
             ),
       ),
     );
