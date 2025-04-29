@@ -76,24 +76,60 @@ class Order {
       );
     }
 
-    // Calculate priority based on:
-    // 1. Total preparation time (inversely proportional)
-    // 2. Number of parallel groups (directly proportional)
-    // 3. Wait time factor
-    double prepTimeWeight =
-        1.0 / (1.0 + totalPrepTime / 60.0); // Normalize to hour
-    double parallelWeight = parallelGroups / items.length;
+    // Calculate wait time factor with exponential growth
     double waitTimeFactor = _calculateWaitTimeFactor();
 
-    priority =
-        (prepTimeWeight * 0.5) +
-        (parallelWeight * 0.3) +
-        (waitTimeFactor * 0.2);
+    // Dynamic weights based on system load
+    double systemLoadFactor = _calculateSystemLoadFactor();
+
+    // Preparation time score (inverse relationship - shorter prep time = higher score)
+    double prepTimeScore =
+        1.0 / (1.0 + totalPrepTime / 30.0); // Normalized to 30 minutes
+
+    // Parallel processing efficiency score
+    double parallelScore =
+        parallelGroups > 0 ? parallelGroups / items.length : 0.0;
+
+    // Wait time score with exponential growth
+    double waitTimeScore = 1.0 - (1.0 / (1.0 + waitTimeFactor));
+
+    // Dynamic priority calculation
+    if (systemLoadFactor < 0.3) {
+      // Light load - favor FCFS
+      priority =
+          (waitTimeScore * 0.7) + (prepTimeScore * 0.2) + (parallelScore * 0.1);
+    } else if (systemLoadFactor < 0.7) {
+      // Medium load - balanced approach
+      priority =
+          (waitTimeScore * 0.4) + (prepTimeScore * 0.4) + (parallelScore * 0.2);
+    } else {
+      // Heavy load - favor SJF with parallel processing
+      priority =
+          (waitTimeScore * 0.2) + (prepTimeScore * 0.5) + (parallelScore * 0.3);
+    }
+
+    // Boost priority for orders with ready items
+    if (hasReadyItems) {
+      priority = (priority + 1.0) / 2.0;
+    }
   }
 
   double _calculateWaitTimeFactor() {
     final waitTimeInMinutes = DateTime.now().difference(createdAt).inMinutes;
-    return waitTimeInMinutes / 30.0; // Normalize to 30 minutes
+    // Exponential growth for wait time impact
+    return (waitTimeInMinutes * waitTimeInMinutes) /
+        900.0; // Normalized to 30 minutes squared
+  }
+
+  double _calculateSystemLoadFactor() {
+    // This is a simplified version. In a real system, this would consider:
+    // 1. Number of pending orders
+    // 2. Kitchen capacity
+    // 3. Current processing rate
+    final waitTimeInMinutes = DateTime.now().difference(createdAt).inMinutes;
+    return waitTimeInMinutes > 15
+        ? 0.8
+        : (waitTimeInMinutes / 15.0); // Simple load estimation
   }
 
   // Check if the order is handled by the kitchen
