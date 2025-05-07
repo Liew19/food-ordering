@@ -1,0 +1,262 @@
+{
+  "@@locale": "en",
+
+  "appTitle": "Food App",
+  "@appTitle": {
+    "description": "The title of the application"
+  },
+
+  "menuLabel": "Menu",
+  "@menuLabel": {
+    "description": "Label for the menu tab"
+  },
+
+  "cartLabel": "Cart",
+  "@cartLabel": {
+    "description": "Label for the cart tab"
+  },
+
+  "ordersLabel": "Orders",
+  "@ordersLabel": {
+    "description": "Label for the orders tab"
+  },
+
+  "kitchenLabel": "Kitchen",
+  "@kitchenLabel": {
+    "description": "Label for the kitchen tab"
+  },
+
+  "staffLabel": "Staff",
+  "@staffLabel": {
+    "description": "Label for the staff tab"
+  },
+
+  "allCategories": "All Categories",
+  "@allCategories": {
+    "description": "Text for all categories"
+  },
+
+  "errorText": "Error: {error}",
+  "@errorText": {
+    "description": "Error message with placeholder",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "Network error"
+      }
+    }
+  },
+
+  "preparationTime": "Preparation Time: {minutes} minutes",
+  "@preparationTime": {
+    "description": "Preparation time with minutes",
+    "placeholders": {
+      "minutes": {
+        "type": "double",
+        "format": "decimalPattern",
+        "example": "10.5"
+      }
+    }
+  },
+
+  "rating": "Rating: {rating}",
+  "@rating": {
+    "description": "Rating with value",
+    "placeholders": {
+      "rating": {
+        "type": "String",
+        "example": "4.5"
+      }
+    }
+  },
+
+  "price": "RM {price}",
+  "@price": {
+    "description": "Price with value",
+    "placeholders": {
+      "price": {
+        "type": "String",
+        "example": "25.90"
+      }
+    }
+  },
+
+  "orderNumber": "Order #{id}",
+  "@orderNumber": {
+    "description": "Order number with ID",
+    "placeholders": {
+      "id": {
+        "type": "String",
+        "example": "12345"
+      }
+    }
+  },
+
+  "receivedTime": "Received: {time}",
+  "@receivedTime": {
+    "description": "Time when order was received",
+    "placeholders": {
+      "time": {
+        "type": "String",
+        "example": "5 minutes ago"
+      }
+    }
+  },
+
+  "completedTime": "Completed: {time}",
+  "@completedTime": {
+    "description": "Time when order was completed",
+    "placeholders": {
+      "time": {
+        "type": "String",
+        "example": "2 minutes ago"
+      }
+    }
+  },
+
+  "noDescription": "No description available for this item.",
+  "@noDescription": {
+    "description": "Text shown when item has no description"
+  },
+
+  "emptyCart": "Your cart is empty",
+  "@emptyCart": {
+    "description": "Message shown when cart is empty"
+  },
+
+  "startShopping": "Start Shopping",
+  "@startShopping": {
+    "description": "Button text to start shopping"
+  },
+
+  "addToCart": "Add to Cart",
+  "@addToCart": {
+    "description": "Button text to add item to cart"
+  },
+
+  "checkout": "Checkout",
+  "@checkout": {
+    "description": "Button text for checkout"
+  },
+
+  "total": "Total",
+  "@total": {
+    "description": "Label for total amount"
+  },
+
+  "subtotal": "Subtotal",
+  "@subtotal": {
+    "description": "Label for subtotal amount"
+  },
+
+  "serviceTax": "Service Tax (10%)",
+  "@serviceTax": {
+    "description": "Label for service tax"
+  },
+
+  "pending": "Pending",
+  "@pending": {
+    "description": "Status label for pending orders"
+  },
+
+  "preparing": "Preparing",
+  "@preparing": {
+    "description": "Status label for orders being prepared"
+  },
+
+  "ready": "Ready",
+  "@ready": {
+    "description": "Status label for ready orders"
+  },
+
+  "completed": "Completed",
+  "@completed": {
+    "description": "Status label for completed orders"
+  },
+
+  "startCooking": "Start Cooking",
+  "@startCooking": {
+    "description": "Button text to start cooking"
+  },
+
+  "markAsReady": "Mark as Ready",
+  "@markAsReady": {
+    "description": "Button text to mark order as ready"
+  },
+
+  "language": "Language",
+  "@language": {
+    "description": "Label for language selection"
+  },
+
+  "english": "English",
+  "@english": {
+    "description": "English language option"
+  },
+
+  "chinese": "中文",
+  "@chinese": {
+    "description": "Chinese language option"
+  },
+
+  "fairPriorityAlgorithm": "Fair Priority Algorithm",
+  "@fairPriorityAlgorithm": {
+    "description": "Name of the fair priority algorithm"
+  },
+
+  "fcfsAlgorithm": "First-Come, First-Served (FCFS)",
+  "@fcfsAlgorithm": {
+    "description": "Name of the FCFS algorithm"
+  },
+
+  "sjfAlgorithm": "Shortest Job First (SJF)",
+  "@sjfAlgorithm": {
+    "description": "Name of the SJF algorithm"
+  },
+
+  "kitchen": "Kitchen:",
+  "@kitchen": {
+    "description": "Kitchen label"
+  },
+
+  "beveragesAndDesserts": "Beverages & Desserts:",
+  "@beveragesAndDesserts": {
+    "description": "Beverages and desserts label"
+  },
+
+  "pending": "Pending",
+  "@pending": {
+    "description": "Pending status"
+  },
+
+  "preparing": "Preparing",
+  "@preparing": {
+    "description": "Preparing status"
+  },
+
+  "ready": "Ready",
+  "@ready": {
+    "description": "Ready status"
+  },
+
+  "completed": "Completed",
+  "@completed": {
+    "description": "Completed status"
+  },
+
+  "cancelled": "Cancelled",
+  "@cancelled": {
+    "description": "Cancelled status"
+  },
+
+  "orderNumber": "Order #{id}",
+  "@orderNumber": {
+    "description": "Order number with ID",
+    "placeholders": {
+      "id": {
+        "type": "String",
+        "example": "12345"
+      }
+    }
+  }
+}

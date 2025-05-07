@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../models/menu_item.dart';
 import '../state/cart_provider.dart';
 import '../theme.dart';
@@ -163,7 +164,7 @@ class MenuItemDetailDialog extends StatelessWidget {
                           // Description
                           Text(
                             item.description ??
-                                'No description available for this item.',
+                                AppLocalizations.of(context)!.noDescription,
                             style: TextStyle(
                               fontSize: isDesktop ? 16 : 14,
                               color:
@@ -188,7 +189,9 @@ class MenuItemDetailDialog extends StatelessWidget {
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                "Preparation Time: ${item.preparationTime} minutes",
+                                AppLocalizations.of(
+                                  context,
+                                )!.preparationTime(item.preparationTime),
                                 style: TextStyle(
                                   fontSize: isDesktop ? 14 : 12,
                                   color:
@@ -211,7 +214,9 @@ class MenuItemDetailDialog extends StatelessWidget {
                                 ),
                                 const SizedBox(width: 8),
                                 Text(
-                                  "Rating: ${item.rating!.toStringAsFixed(1)}",
+                                  AppLocalizations.of(
+                                    context,
+                                  )!.rating(item.rating!.toStringAsFixed(1)),
                                   style: TextStyle(
                                     fontSize: isDesktop ? 14 : 12,
                                     color:
@@ -231,7 +236,9 @@ class MenuItemDetailDialog extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                'RM ${item.price.toStringAsFixed(2)}',
+                                AppLocalizations.of(
+                                  context,
+                                )!.price(item.price.toStringAsFixed(2)),
                                 style: TextStyle(
                                   fontSize: isDesktop ? 22 : 18,
                                   fontWeight: FontWeight.bold,
@@ -283,7 +290,9 @@ class MenuItemDetailDialog extends StatelessWidget {
                                       color: Colors.white,
                                     ),
                                   ),
-                                  label: const Text('Add to Cart'),
+                                  label: Text(
+                                    AppLocalizations.of(context)!.addToCart,
+                                  ),
                                   style: AppTheme.primaryButtonStyle.copyWith(
                                     shape: MaterialStateProperty.all<
                                       RoundedRectangleBorder

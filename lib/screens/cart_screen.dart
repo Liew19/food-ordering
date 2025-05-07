@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fyp/models/order.dart';
 import 'package:fyp/state/order_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../state/cart_provider.dart';
 import '../widgets/food_app_bar.dart';
 
@@ -101,9 +102,9 @@ class CartScreen extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 16),
-                          const Text(
-                            'Your cart is empty',
-                            style: TextStyle(
+                          Text(
+                            AppLocalizations.of(context)!.emptyCart,
+                            style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
                             ),
@@ -127,9 +128,9 @@ class CartScreen extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(8),
                               ),
                             ),
-                            child: const Text(
-                              'Browse Menu',
-                              style: TextStyle(
+                            child: Text(
+                              AppLocalizations.of(context)!.startShopping,
+                              style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -212,7 +213,9 @@ class CartScreen extends StatelessWidget {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                'RM ${cartItem.item.price.toStringAsFixed(2)}',
+                                AppLocalizations.of(context)!.price(
+                                  cartItem.item.price.toStringAsFixed(2),
+                                ),
                                 style: TextStyle(
                                   color: Theme.of(context).primaryColor,
                                   fontWeight: FontWeight.bold,
@@ -291,31 +294,39 @@ class CartScreen extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
-                            'Subtotal',
-                            style: TextStyle(color: Colors.grey),
+                          Text(
+                            AppLocalizations.of(context)!.subtotal,
+                            style: const TextStyle(color: Colors.grey),
                           ),
-                          Text('RM ${subtotal.toStringAsFixed(2)}'),
+                          Text(
+                            AppLocalizations.of(
+                              context,
+                            )!.price(subtotal.toStringAsFixed(2)),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 8),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
-                            'Service Tax (10%)',
-                            style: TextStyle(color: Colors.grey),
+                          Text(
+                            AppLocalizations.of(context)!.serviceTax,
+                            style: const TextStyle(color: Colors.grey),
                           ),
-                          Text('RM ${serviceTax.toStringAsFixed(2)}'),
+                          Text(
+                            AppLocalizations.of(
+                              context,
+                            )!.price(serviceTax.toStringAsFixed(2)),
+                          ),
                         ],
                       ),
                       const Divider(height: 24),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
-                            'Total',
-                            style: TextStyle(
+                          Text(
+                            AppLocalizations.of(context)!.total,
+                            style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
                             ),

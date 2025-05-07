@@ -1,0 +1,87 @@
+{
+  "@@locale": "zh",
+
+  "appTitle": "点餐应用",
+
+  "menuLabel": "菜单",
+
+  "cartLabel": "购物车",
+
+  "ordersLabel": "订单",
+
+  "kitchenLabel": "厨房",
+
+  "staffLabel": "员工",
+
+  "allCategories": "所有类别",
+
+  "errorText": "错误: {error}",
+
+  "preparationTime": "准备时间: {minutes} 分钟",
+
+  "rating": "评分: {rating}",
+
+  "price": "RM {price}",
+
+  "orderNumber": "订单 #{id}",
+
+  "receivedTime": "接收时间: {time}",
+
+  "completedTime": "完成时间: {time}",
+
+  "noDescription": "此项目没有可用的描述。",
+
+  "emptyCart": "您的购物车是空的",
+
+  "startShopping": "浏览菜单",
+
+  "addToCart": "加入购物车",
+
+  "checkout": "结账",
+
+  "total": "总计",
+
+  "subtotal": "小计",
+
+  "serviceTax": "服务税 (10%)",
+
+  "pending": "等待中",
+
+  "preparing": "准备中",
+
+  "ready": "就绪",
+
+  "completed": "已完成",
+
+  "startCooking": "开始烹饪",
+
+  "markAsReady": "标记为就绪",
+
+  "language": "语言",
+
+  "english": "English",
+
+  "chinese": "中文",
+
+  "fairPriorityAlgorithm": "公平优先级算法",
+
+  "fcfsAlgorithm": "先到先得 (FCFS)",
+
+  "sjfAlgorithm": "最短作业优先 (SJF)",
+
+  "kitchen": "厨房:",
+
+  "beveragesAndDesserts": "饮料和甜点:",
+
+  "pending": "等待中",
+
+  "preparing": "准备中",
+
+  "ready": "就绪",
+
+  "completed": "已完成",
+
+  "cancelled": "已取消",
+
+  "orderNumber": "订单 #{id}"
+}

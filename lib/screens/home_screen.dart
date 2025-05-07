@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:fyp/widgets/loading_indicator.dart';
 import '../models/menu_item.dart';
 import '../services/api_service.dart';
@@ -98,7 +99,11 @@ class _HomeScreenState extends State<HomeScreen> {
               _isLoading
                   ? Center(child: LoadingIndicator())
                   : _error != null
-                  ? Center(child: Text('Error: $_error'))
+                  ? Center(
+                    child: Text(
+                      AppLocalizations.of(context)!.errorText(_error ?? ''),
+                    ),
+                  )
                   : SingleChildScrollView(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -185,7 +190,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         Padding(
                           padding: const EdgeInsets.all(16),
                           child: Text(
-                            selectedCategory ?? 'All Categories',
+                            selectedCategory ??
+                                AppLocalizations.of(context)!.allCategories,
                             style: const TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,

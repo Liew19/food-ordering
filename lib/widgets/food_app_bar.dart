@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../state/cart_provider.dart';
 import 'menu_search_bar.dart';
+import 'language_selector.dart';
 
 class FoodAppBar extends StatelessWidget implements PreferredSizeWidget {
   final TextEditingController? searchController;
@@ -31,7 +32,7 @@ class FoodAppBar extends StatelessWidget implements PreferredSizeWidget {
       title: Row(
         children: [
           Text(
-            customTitle ?? 'FoodApp',
+            customTitle ?? 'FoodApp', // Keep app title in English
             style: TextStyle(
               color:
                   customTitle != null
@@ -54,6 +55,9 @@ class FoodAppBar extends StatelessWidget implements PreferredSizeWidget {
       actions: [
         // Custom actions
         if (actions != null) ...actions!,
+
+        // Language selector
+        const LanguageSelector(),
 
         // Cart icon
         if (showCart)

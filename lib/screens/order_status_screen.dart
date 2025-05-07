@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:fyp/state/order_provider.dart';
 import 'package:fyp/models/order.dart';
 import 'package:fyp/models/menu_item.dart';
 import 'package:fyp/widgets/food_app_bar.dart';
 
 class OrderStatusScreen extends StatelessWidget {
-  const OrderStatusScreen({super.key});
+  OrderStatusScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    // Save the context for localization
+    _lastKnownContext = context;
+
     final orderProvider = Provider.of<OrderProvider>(context);
     final sortedOrders = orderProvider.getSortedOrders();
 
@@ -24,9 +28,9 @@ class OrderStatusScreen extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Your Orders',
-                  style: TextStyle(
+                Text(
+                  AppLocalizations.of(context)!.ordersLabel,
+                  style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                     color: Colors.black87,
@@ -61,8 +65,12 @@ class OrderStatusScreen extends StatelessWidget {
                                 size: 20,
                               ),
                               const SizedBox(width: 8),
-                              const Flexible(
-                                child: Text('Fair Priority Algorithm'),
+                              Flexible(
+                                child: Text(
+                                  AppLocalizations.of(
+                                    context,
+                                  )!.fairPriorityAlgorithm,
+                                ),
                               ),
                               if (orderProvider.currentAlgorithm ==
                                   OrderSortAlgorithm.advancedPriority)
@@ -89,8 +97,10 @@ class OrderStatusScreen extends StatelessWidget {
                                 size: 20,
                               ),
                               const SizedBox(width: 8),
-                              const Flexible(
-                                child: Text('First-Come, First-Served (FCFS)'),
+                              Flexible(
+                                child: Text(
+                                  AppLocalizations.of(context)!.fcfsAlgorithm,
+                                ),
                               ),
                               if (orderProvider.currentAlgorithm ==
                                   OrderSortAlgorithm.fcfs)
@@ -117,8 +127,10 @@ class OrderStatusScreen extends StatelessWidget {
                                 size: 20,
                               ),
                               const SizedBox(width: 8),
-                              const Flexible(
-                                child: Text('Shortest Job First (SJF)'),
+                              Flexible(
+                                child: Text(
+                                  AppLocalizations.of(context)!.sjfAlgorithm,
+                                ),
                               ),
                               if (orderProvider.currentAlgorithm ==
                                   OrderSortAlgorithm.sjf)
@@ -167,7 +179,9 @@ class OrderStatusScreen extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                'Order #${order.id}',
+                                AppLocalizations.of(
+                                  context,
+                                )!.orderNumber(order.id),
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,
@@ -183,9 +197,9 @@ class OrderStatusScreen extends StatelessWidget {
                                     color: Colors.green[50],
                                     borderRadius: BorderRadius.circular(12),
                                   ),
-                                  child: const Text(
-                                    'Completed',
-                                    style: TextStyle(
+                                  child: Text(
+                                    AppLocalizations.of(context)!.completed,
+                                    style: const TextStyle(
                                       color: Colors.green,
                                       fontWeight: FontWeight.w500,
                                       fontSize: 12,
@@ -204,9 +218,9 @@ class OrderStatusScreen extends StatelessWidget {
                                   color: Colors.orange,
                                 ),
                                 const SizedBox(width: 8),
-                                const Text(
-                                  'Kitchen:',
-                                  style: TextStyle(
+                                Text(
+                                  AppLocalizations.of(context)!.kitchen,
+                                  style: const TextStyle(
                                     fontWeight: FontWeight.w500,
                                     fontSize: 14,
                                   ),
@@ -220,7 +234,9 @@ class OrderStatusScreen extends StatelessWidget {
                                   decoration: BoxDecoration(
                                     color: _getStatusColor(
                                       kitchenStatus,
-                                    ).withOpacity(0.1),
+                                    ).withAlpha(
+                                      25,
+                                    ), // Using withAlpha instead of withOpacity
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: Text(
@@ -267,9 +283,11 @@ class OrderStatusScreen extends StatelessWidget {
                                   color: Colors.blue,
                                 ),
                                 const SizedBox(width: 8),
-                                const Text(
-                                  'Beverages & Desserts:',
-                                  style: TextStyle(
+                                Text(
+                                  AppLocalizations.of(
+                                    context,
+                                  )!.beveragesAndDesserts,
+                                  style: const TextStyle(
                                     fontWeight: FontWeight.w500,
                                     fontSize: 14,
                                   ),
@@ -283,7 +301,9 @@ class OrderStatusScreen extends StatelessWidget {
                                   decoration: BoxDecoration(
                                     color: _getStatusColor(
                                       staffStatus,
-                                    ).withOpacity(0.1),
+                                    ).withAlpha(
+                                      25,
+                                    ), // Using withAlpha instead of withOpacity
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: Text(
@@ -347,18 +367,39 @@ class OrderStatusScreen extends StatelessWidget {
     }
   }
 
+  // We need a BuildContext to access localizations
+  late BuildContext? _lastKnownContext;
+
   String _getStatusText(OrderStatus status) {
+    // Use the last known context if available
+    if (_lastKnownContext == null) {
+      // Fallback to English if context is not available
+      switch (status) {
+        case OrderStatus.pending:
+          return 'Pending';
+        case OrderStatus.preparing:
+          return 'Preparing';
+        case OrderStatus.ready:
+          return 'Ready';
+        case OrderStatus.completed:
+          return 'Completed';
+        case OrderStatus.cancelled:
+          return 'Cancelled';
+      }
+    }
+
+    final l10n = AppLocalizations.of(_lastKnownContext!)!;
     switch (status) {
       case OrderStatus.pending:
-        return 'Pending';
+        return l10n.pending;
       case OrderStatus.preparing:
-        return 'Preparing';
+        return l10n.preparing;
       case OrderStatus.ready:
-        return 'Ready';
+        return l10n.ready;
       case OrderStatus.completed:
-        return 'Completed';
+        return l10n.completed;
       case OrderStatus.cancelled:
-        return 'Cancelled';
+        return l10n.cancelled;
     }
   }
 

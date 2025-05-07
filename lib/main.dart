@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:fyp/screens/cart_screen.dart';
 import 'package:fyp/screens/home_screen.dart';
 import 'package:fyp/screens/kitchen_screen.dart';
 import 'package:fyp/screens/order_status_screen.dart';
 // import 'package:fyp/screens/shared_table_screen.dart'; // Temporarily commented out
 import 'package:fyp/screens/staff_screen.dart';
+import 'package:fyp/state/language_provider.dart';
 import 'package:fyp/theme.dart';
 import 'package:provider/provider.dart';
 import 'state/cart_provider.dart';
@@ -19,6 +21,7 @@ import 'services/shared_table_service.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'models/menu_item.dart';
 import 'models/shared_table.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -80,16 +83,26 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => OrderProvider()),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => TableState(sharedTableService)),
+        ChangeNotifierProvider(create: (_) => LanguageProvider()),
       ],
-      child: Consumer<ThemeProvider>(
+      child: Consumer2<ThemeProvider, LanguageProvider>(
         builder:
-            (context, themeProvider, child) => MaterialApp(
+            (context, themeProvider, languageProvider, child) => MaterialApp(
               title: 'Restaurant App',
               theme: AppTheme.lightTheme,
               darkTheme: AppTheme.darkTheme,
               themeMode:
                   themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
               debugShowCheckedModeBanner: false,
+
+              // Localization support
+              locale: languageProvider.locale,
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: const [
+                Locale('en'), // English
+                Locale('zh'), // Chinese
+              ],
+
               home: MainScreen(),
               routes: {
                 '/cart': (context) => MainScreen(initialIndex: 1),
@@ -136,26 +149,38 @@ class MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Use localized strings for navigation bar
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       body: _screens[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
-        items: const <BottomNavigationBarItem>[
+        items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: Icon(Icons.restaurant_menu),
-            label: 'Menu',
+            icon: const Icon(Icons.restaurant_menu),
+            label: l10n.menuLabel,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.shopping_cart),
-            label: 'Cart',
+            icon: const Icon(Icons.shopping_cart),
+            label: l10n.cartLabel,
           ),
-          BottomNavigationBarItem(icon: Icon(Icons.receipt), label: 'Orders'),
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.receipt),
+            label: l10n.ordersLabel,
+          ),
           // BottomNavigationBarItem(
           //   icon: Icon(Icons.people),
           //   label: 'Share Table',
           // ),
-          BottomNavigationBarItem(icon: Icon(Icons.kitchen), label: 'Kitchen'),
-          BottomNavigationBarItem(icon: Icon(Icons.badge), label: 'Staff'),
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.kitchen),
+            label: l10n.kitchenLabel,
+          ),
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.badge),
+            label: l10n.staffLabel,
+          ),
         ],
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
