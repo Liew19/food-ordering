@@ -231,8 +231,8 @@ class _StartSharingDialogState extends State<StartSharingDialog> {
                         horizontal: 24,
                         vertical: 12,
                       ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.zero, // 直角
                       ),
                     ),
                     child: Row(

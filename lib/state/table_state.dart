@@ -31,22 +31,37 @@ class TableState extends ChangeNotifier {
 
   /// Create a new sharing table with specified table number
   Future<void> createNewSharing(int tableNumber, String? description) async {
-    // 检查桌号是否已存在
-    if (_tables.any((table) => table.tableId == tableNumber)) {
-      throw Exception('该桌号已存在，请选择其他桌号');
+    try {
+      // Check if table number already exists
+      if (_tables.any((table) => table.tableId == tableNumber)) {
+        throw Exception(
+          'Table number already exists, please choose another one',
+        );
+      }
+
+      // Validate description length
+      final validDescription =
+          description != null && description.trim().isNotEmpty
+              ? description.trim().length > 15
+                  ? description.trim().substring(0, 15)
+                  : description.trim()
+              : null;
+
+      // Create a new shared table
+      final newTable = SharedTable(
+        tableId: tableNumber,
+        status: TableStatus.sharing,
+        description: validDescription,
+        capacity: 4, // Default 4-person table
+        occupiedSeats: 1, // Initiator occupies 1 seat
+      );
+
+      await _tableService.saveTable(newTable);
+      await _loadTables();
+    } catch (e) {
+      print('Error creating new sharing table: $e');
+      rethrow;
     }
-
-    // 创建一个新的拼桌记录
-    final newTable = SharedTable(
-      tableId: tableNumber,
-      status: TableStatus.sharing,
-      description: description,
-      capacity: 4, // 默认4人桌
-      occupiedSeats: 1, // 发起者占用1个座位
-    );
-
-    await _tableService.saveTable(newTable);
-    await _loadTables();
   }
 
   /// Start sharing a table

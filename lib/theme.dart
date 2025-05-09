@@ -27,10 +27,11 @@ class AppTheme {
   static final ButtonStyle primaryButtonStyle = ElevatedButton.styleFrom(
     backgroundColor: primaryColor,
     foregroundColor: Colors.white,
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-    padding: const EdgeInsets.symmetric(vertical: 16),
-    elevation: 5,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+    padding: const EdgeInsets.symmetric(vertical: 10),
+    elevation: 3,
     shadowColor: shadowColor,
+    minimumSize: const Size(0, 40),
   );
 
   // Gradients

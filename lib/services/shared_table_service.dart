@@ -20,15 +20,22 @@ class SharedTableService {
   /// Initialize the service and register adapters
   Future<void> init() async {
     try {
-      await Hive.openBox<SharedTable>('shared_tables');
+      // Check if box is already open
+      if (Hive.isBoxOpen('shared_tables')) {
+        _tableBox = Hive.box<SharedTable>('shared_tables');
+      } else {
+        _tableBox = await Hive.openBox<SharedTable>('shared_tables');
+      }
       await _initializeDefaultTables();
     } catch (e) {
+      print('Error initializing shared table service: $e');
       // Try to recover from corrupted box
       try {
         await Hive.deleteBoxFromDisk('shared_tables');
-        await Hive.openBox<SharedTable>('shared_tables');
+        _tableBox = await Hive.openBox<SharedTable>('shared_tables');
         await _initializeDefaultTables();
       } catch (deleteError) {
+        print('Failed to recover from corrupted box: $deleteError');
         throw Exception('Failed to initialize shared tables storage');
       }
     }
@@ -37,8 +44,12 @@ class SharedTableService {
   /// Initialize default tables for testing
   Future<void> _initializeDefaultTables() async {
     try {
-      final box = Hive.box<SharedTable>('shared_tables');
-      if (box.isEmpty) {
+      if (!Hive.isBoxOpen('shared_tables')) {
+        _tableBox = Hive.box<SharedTable>('shared_tables');
+      }
+
+      if (_tableBox.isEmpty) {
+        print('Initializing default tables');
         // Initialize with some default tables
         final defaultTables = List.generate(
           10,
@@ -49,19 +60,23 @@ class SharedTableService {
             occupiedSeats: 0,
           ),
         );
-        await box.addAll(defaultTables);
+        await _tableBox.addAll(defaultTables);
+        print('Added ${defaultTables.length} default tables');
       }
     } catch (e) {
-      // Silently handle initialization errors
+      print('Error initializing default tables: $e');
     }
   }
 
   /// Get all tables
   List<SharedTable> getAllTables() {
     try {
-      final box = Hive.box<SharedTable>('shared_tables');
-      return box.values.toList();
+      if (!Hive.isBoxOpen('shared_tables')) {
+        _tableBox = Hive.box<SharedTable>('shared_tables');
+      }
+      return _tableBox.values.toList();
     } catch (e) {
+      print('Error getting all tables: $e');
       return [];
     }
   }
@@ -69,9 +84,12 @@ class SharedTableService {
   /// Get table by ID
   SharedTable? getTableById(int tableId) {
     try {
-      final box = Hive.box<SharedTable>('shared_tables');
-      return box.values.firstWhere((table) => table.tableId == tableId);
+      if (!Hive.isBoxOpen('shared_tables')) {
+        _tableBox = Hive.box<SharedTable>('shared_tables');
+      }
+      return _tableBox.values.firstWhere((table) => table.tableId == tableId);
     } catch (e) {
+      print('Error getting table by ID: $e');
       return null;
     }
   }
@@ -79,17 +97,24 @@ class SharedTableService {
   /// Save a table
   Future<void> saveTable(SharedTable table) async {
     try {
-      final box = Hive.box<SharedTable>('shared_tables');
-      final index = box.values.toList().indexWhere(
+      if (!Hive.isBoxOpen('shared_tables')) {
+        _tableBox = Hive.box<SharedTable>('shared_tables');
+      }
+
+      final index = _tableBox.values.toList().indexWhere(
         (t) => t.tableId == table.tableId,
       );
+
       if (index != -1) {
-        await box.putAt(index, table);
+        await _tableBox.putAt(index, table);
       } else {
-        await box.add(table);
+        await _tableBox.add(table);
       }
+
+      print('Table saved successfully: ${table.tableId}');
     } catch (e) {
-      throw Exception('Failed to save table');
+      print('Error saving table: $e');
+      throw Exception('Failed to save table: ${e.toString()}');
     }
   }
 

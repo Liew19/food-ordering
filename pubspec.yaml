@@ -35,9 +35,12 @@ dependencies:
   hive_flutter: ^1.1.0
   firebase_core: ^2.24.2
   firebase_database: ^10.0.0
+  firebase_auth: ^4.17.5
   cloud_firestore: ^4.15.5
   http: ^0.13.0
   smooth_page_indicator: ^1.1.0
+  flutter_stripe: ^10.0.0
+  flutter_dotenv: ^5.1.0
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -84,6 +87,9 @@ flutter:
     - assets/images/skyjuice.jpg
     - assets/images/orangejuice.jpg
     - assets/images/americano.jpg
+    # Environment variables
+    - .env
+    - assets/env.txt
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
