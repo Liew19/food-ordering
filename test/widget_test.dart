@@ -8,22 +8,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fyp/services/api_service.dart';
-import 'package:fyp/services/shared_table_service.dart';
 import 'package:fyp/main.dart';
 
 void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
     final mockApiService = ApiService();
-    final mockSharedTableService = SharedTableService();
-    await mockSharedTableService.init();
-
-    await tester.pumpWidget(
-      MyApp(
-        apiService: mockApiService,
-        sharedTableService: mockSharedTableService,
-      ),
-    );
+    await tester.pumpWidget(MyApp(apiService: mockApiService));
 
     // Verify that our counter starts at 0.
     expect(find.text('0'), findsOneWidget);
