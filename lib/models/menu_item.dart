@@ -24,6 +24,8 @@ class MenuItem {
   final bool isPopular;
   @HiveField(9)
   final double preparationTime;
+  @HiveField(10)
+  final bool canPrepareInParallel;
 
   MenuItem({
     required this.id,
@@ -36,6 +38,7 @@ class MenuItem {
     this.rating,
     this.isPopular = false,
     required this.preparationTime,
+    this.canPrepareInParallel = true,
   });
 
   // Get the asset path for local images
@@ -104,6 +107,7 @@ class MenuItem {
       rating: (json['rating'] as num?)?.toDouble(),
       isPopular: json['isPopular'] as bool? ?? false,
       preparationTime: (json['preparationTime'] as num).toDouble(),
+      canPrepareInParallel: json['canPrepareInParallel'] as bool? ?? true,
     );
   }
 }

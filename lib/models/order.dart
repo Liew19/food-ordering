@@ -16,6 +16,10 @@ class Order {
   DateTime? completedAt;
   double priority = 0.0;
 
+  // Flag to indicate if any items in this order are ready
+  // This will be set by OrderProvider when calculating priorities
+  bool hasReadyItems = false;
+
   Order({
     required this.id,
     this.orderId,
@@ -27,40 +31,69 @@ class Order {
     required this.createdAt,
     this.completedAt,
   });
-  // Calculate order priority
+  // Calculate order priority based on preparation time and parallel processing capability
   void calculatePriority() {
-    // Get preparation time priority (40% weight)
-    final preparationTimePriority = _calculatePreparationTimePriority() * 0.4;
+    if (items.isEmpty) {
+      priority = 0.0;
+      return;
+    }
 
-    // Get order type priority (30% weight)
-    final orderTypePriority =
-        (tableNumber == null ? 3 : 2) *
-        0.3; // Takeaway orders have higher priority
+    // Calculate total preparation time
+    double totalPrepTime = 0.0;
+    int parallelGroups = 0;
+    List<CartItem> remainingItems = List.from(items);
 
-    // Get amount priority (20% weight)
-    final amountPriority = _calculateAmountPriority() * 0.2;
+    while (remainingItems.isNotEmpty) {
+      // Find items that can be prepared in parallel
+      var parallelItems =
+          remainingItems
+              .where((item) => item.item.canPrepareInParallel)
+              .toList();
+      var serialItems =
+          remainingItems
+              .where((item) => !item.item.canPrepareInParallel)
+              .toList();
 
-    // Get wait time priority (10% weight)
-    final waitTimePriority = _calculateWaitTimePriority() * 0.1;
+      if (parallelItems.isNotEmpty) {
+        // For parallel items, take the maximum preparation time
+        double maxParallelTime = parallelItems
+            .map((item) => item.item.preparationTime)
+            .reduce((max, value) => max > value ? max : value);
+        totalPrepTime += maxParallelTime;
+        parallelGroups++;
+      }
+
+      if (serialItems.isNotEmpty) {
+        // For serial items, add their preparation times
+        totalPrepTime += serialItems
+            .map((item) => item.item.preparationTime)
+            .reduce((a, b) => a + b);
+      }
+
+      // Remove processed items
+      remainingItems.removeWhere(
+        (item) => parallelItems.contains(item) || serialItems.contains(item),
+      );
+    }
+
+    // Calculate priority based on:
+    // 1. Total preparation time (inversely proportional)
+    // 2. Number of parallel groups (directly proportional)
+    // 3. Wait time factor
+    double prepTimeWeight =
+        1.0 / (1.0 + totalPrepTime / 60.0); // Normalize to hour
+    double parallelWeight = parallelGroups / items.length;
+    double waitTimeFactor = _calculateWaitTimeFactor();
 
     priority =
-        preparationTimePriority +
-        orderTypePriority +
-        amountPriority +
-        waitTimePriority;
+        (prepTimeWeight * 0.5) +
+        (parallelWeight * 0.3) +
+        (waitTimeFactor * 0.2);
   }
 
-  int _calculatePreparationTimePriority() {
-    final maxPrepTime =
-        items.isEmpty
-            ? 0
-            : items
-                .map((item) => item.item.preparationTime)
-                .reduce((max, value) => max > value ? max : value);
-
-    if (maxPrepTime <= 10) return 3; // Quick preparation
-    if (maxPrepTime <= 20) return 2; // Standard preparation
-    return 1; // Long preparation
+  double _calculateWaitTimeFactor() {
+    final waitTimeInMinutes = DateTime.now().difference(createdAt).inMinutes;
+    return waitTimeInMinutes / 30.0; // Normalize to 30 minutes
   }
 
   // Check if the order is handled by the kitchen
@@ -87,19 +120,6 @@ class Order {
   bool _isStaffItem(MenuItem item) {
     return item.category.toLowerCase() == 'beverage' ||
         item.category.toLowerCase() == 'dessert';
-  }
-
-  int _calculateAmountPriority() {
-    if (totalPrice > 200) return 3;
-    if (totalPrice >= 100) return 2;
-    return 1;
-  }
-
-  int _calculateWaitTimePriority() {
-    final waitTimeInMinutes = DateTime.now().difference(createdAt).inMinutes;
-    if (waitTimeInMinutes > 15) return 3;
-    if (waitTimeInMinutes > 10) return 2;
-    return 1;
   }
 
   // Get the total number of items in the order

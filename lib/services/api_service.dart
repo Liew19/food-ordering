@@ -72,11 +72,12 @@ class ApiService {
             imageUrl: data['imageUrl'],
             description: data['description'],
             rating: data['rating'],
-            isPopular: data['isPopular'],
+            isPopular: data['isPopular'] ?? false,
             preparationTime:
                 (data['preparationTime'] is int)
                     ? (data['preparationTime'] as int).toDouble()
                     : data['preparationTime'],
+            canPrepareInParallel: data['canPrepareInParallel'] ?? true,
           );
         }).toList();
 
