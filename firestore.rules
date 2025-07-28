@@ -2,18 +2,94 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    
+    // Helper function to get user role
+    function getUserRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+    
+    // Helper function to check if user is admin
+    function isAdmin() {
+      return request.auth != null && getUserRole() == 'admin';
+    }
+    
+    // Helper function to check if user is staff or admin
+    function isStaffOrAdmin() {
+      return request.auth != null && (getUserRole() == 'staff' || getUserRole() == 'admin');
+    }
+    
+    // Helper function to check if user is kitchen staff or admin
+    function isKitchenOrAdmin() {
+      return request.auth != null && (getUserRole() == 'kitchen' || getUserRole() == 'admin');
+    }
 
-    // This rule allows anyone with your Firestore database reference to view, edit,
-    // and delete all data in your Firestore database. It is useful for getting
-    // started, but it is configured to expire after 30 days because it
-    // leaves your app open to attackers. At that time, all client
-    // requests to your Firestore database will be denied.
-    //
-    // Make sure to write security rules for your app before that time, or else
-    // all client requests to your Firestore database will be denied until you Update
-    // your rules
-    match /{document=**} {
-      allow read, write: if request.time < timestamp.date(2025, 4, 5);
+    // Users collection
+    match /users/{userId} {
+      // Users can read their own data
+      allow read: if request.auth != null && request.auth.uid == userId;
+      
+      // Users can update their own data (except role)
+      allow update: if request.auth != null && request.auth.uid == userId && 
+        !('role' in resource.data.diff(request.resource.data).affectedKeys());
+      
+      // Admins can read and update all user data including roles
+      allow read, update: if isAdmin();
+      
+      // Users can create their own profile during signup
+      allow create: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Orders collection
+    match /orders/{orderId} {
+      // Customers can read their own orders
+      allow read: if request.auth != null && 
+        (resource.data.userId == request.auth.uid || isStaffOrAdmin());
+      
+      // Customers can create orders
+      allow create: if request.auth != null;
+      
+      // Staff and admin can update orders
+      allow update: if isStaffOrAdmin();
+      
+      // Kitchen staff and admin can update order status
+      allow update: if isKitchenOrAdmin();
+    }
+
+    // Menu items collection
+    match /menu/{itemId} {
+      // Anyone can read menu items
+      allow read: if true;
+      
+      // Only admin can create, update, delete menu items
+      allow write: if isAdmin();
+    }
+
+    // Reservations collection
+    match /reservations/{reservationId} {
+      // Customers can read their own reservations
+      allow read: if request.auth != null && 
+        (resource.data.userId == request.auth.uid || isStaffOrAdmin());
+      
+      // Customers can create reservations
+      allow create: if request.auth != null;
+      
+      // Staff and admin can update reservations
+      allow update: if isStaffOrAdmin();
+      
+      // Staff and admin can delete reservations
+      allow delete: if isStaffOrAdmin();
+    }
+
+    // Tables collection
+    match /tables/{tableId} {
+      // Staff and admin can read and write table data
+      allow read, write: if isStaffOrAdmin();
+    }
+
+    // Notifications collection
+    match /notifications/{notificationId} {
+      // Staff and admin can read and write notifications
+      allow read, write: if isStaffOrAdmin();
     }
   }
 }

@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:fyp/screens/admin_notifications_screen.dart';
+import 'package:fyp/screens/admin_role_management_screen.dart';
 import 'package:fyp/widgets/food_app_bar.dart';
 import 'package:provider/provider.dart';
 import 'package:fyp/state/auth_provider.dart' as auth;
 import 'package:fyp/screens/login_screen.dart';
 import '../main.dart';
+import 'package:fyp/screens/edit_profile_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -14,7 +17,6 @@ class ProfileScreen extends StatelessWidget {
     final authProvider = Provider.of<auth.AppAuthProvider>(context);
     final user = authProvider.user;
     final userEmail = user?.email ?? 'Guest User';
-    final userName = userEmail.split('@')[0];
     final userRole = authProvider.role ?? 'customer';
 
     return Scaffold(
@@ -38,8 +40,8 @@ class ProfileScreen extends StatelessWidget {
                     child:
                         user != null
                             ? Text(
-                              userName.isNotEmpty
-                                  ? userName[0].toUpperCase()
+                              userEmail.isNotEmpty
+                                  ? userEmail[0].toUpperCase()
                                   : '?',
                               style: const TextStyle(
                                 fontSize: 40,
@@ -55,21 +57,83 @@ class ProfileScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
 
-                  // User name
-                  Text(
-                    userName,
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-
-                  // User email
-                  Text(
-                    userEmail,
-                    style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-                  ),
+                  // User name and email from Firestore
+                  user != null
+                      ? StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                        stream:
+                            FirebaseFirestore.instance
+                                .collection('users')
+                                .doc(user.uid)
+                                .snapshots(),
+                        builder: (context, snapshot) {
+                          if (!snapshot.hasData) {
+                            return const CircularProgressIndicator();
+                          }
+                          final data = snapshot.data!.data();
+                          final name =
+                              data != null &&
+                                      data['name'] != null &&
+                                      (data['name'] as String).isNotEmpty
+                                  ? data['name'] as String
+                                  : userEmail.split('@')[0];
+                          final gender = data?['gender'] ?? 'other';
+                          IconData genderIcon;
+                          Color genderColor;
+                          switch (gender) {
+                            case 'male':
+                              genderIcon = Icons.male;
+                              genderColor = Colors.blue;
+                              break;
+                            case 'female':
+                              genderIcon = Icons.female;
+                              genderColor = Colors.pink;
+                              break;
+                            default:
+                              genderIcon = Icons.person;
+                              genderColor = Colors.grey;
+                          }
+                          return Column(
+                            children: [
+                              Icon(genderIcon, size: 32, color: genderColor),
+                              SizedBox(height: 8),
+                              Text(
+                                name,
+                                style: const TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                userEmail,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      )
+                      : Column(
+                        children: [
+                          Text(
+                            'Guest User',
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            userEmail,
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ],
+                      ),
                   const SizedBox(height: 4),
 
                   // User role
@@ -97,10 +161,9 @@ class ProfileScreen extends StatelessWidget {
                     width: 150,
                     child: ElevatedButton(
                       onPressed: () {
-                        // TODO: Implement edit profile functionality
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Edit profile feature coming soon'),
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => EditProfileScreen(),
                           ),
                         );
                       },
@@ -145,6 +208,21 @@ class ProfileScreen extends StatelessWidget {
                   Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (context) => const AdminNotificationsScreen(),
+                    ),
+                  );
+                },
+              ),
+
+            // Admin role management (only for admin)
+            if (userRole == 'admin')
+              _buildSettingItem(
+                context,
+                icon: Icons.people,
+                title: 'Manage Roles',
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const AdminRoleManagementScreen(),
                     ),
                   );
                 },

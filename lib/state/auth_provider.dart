@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/auth_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AppAuthProvider extends ChangeNotifier {
   final AuthService _authService = AuthService();
@@ -77,6 +78,10 @@ class AppAuthProvider extends ChangeNotifier {
       await _authService.signOut();
       _user = null;
       _role = null;
+      // Clear quick login token
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('login_token');
+      await prefs.remove('login_token_expiry');
       notifyListeners();
     } catch (e) {
       rethrow;

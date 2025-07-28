@@ -6,6 +6,7 @@ import 'package:fyp/screens/forgot_password_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:fyp/state/auth_provider.dart' as auth;
 import '../main.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -18,7 +19,31 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
-  String? _errorMessage;
+  String? _emailError;
+  String? _passwordError;
+  String? _generalError;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkQuickLogin();
+  }
+
+  Future<void> _checkQuickLogin() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('login_token');
+    final expiry = prefs.getInt('login_token_expiry');
+    if (token != null && expiry != null) {
+      final now = DateTime.now().millisecondsSinceEpoch;
+      if (now < expiry) {
+        if (mounted) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const MainScreen()),
+          );
+        }
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -30,32 +55,65 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _signIn() async {
     setState(() {
       _isLoading = true;
-      _errorMessage = null;
+      _emailError = null;
+      _passwordError = null;
+      _generalError = null;
     });
 
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+    bool hasError = false;
+
+    // Local validation
+    if (email.isEmpty) {
+      _emailError = 'Email cannot be empty';
+      hasError = true;
+    } else if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(email)) {
+      _emailError = 'Invalid email format';
+      hasError = true;
+    }
+    if (password.isEmpty) {
+      _passwordError = 'Password cannot be empty';
+      hasError = true;
+    }
+    if (hasError) {
+      setState(() {
+        _isLoading = false;
+      });
+      return;
+    }
+
     try {
-      // Sign in with email and password using AuthProvider
       await Provider.of<auth.AppAuthProvider>(
         context,
         listen: false,
-      ).signIn(_emailController.text.trim(), _passwordController.text.trim());
+      ).signIn(email, password);
 
-      // Navigate to main screen on successful login
+      // Save token and expiry for quick login
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('login_token', 'valid');
+      await prefs.setInt(
+        'login_token_expiry',
+        DateTime.now().add(const Duration(days: 7)).millisecondsSinceEpoch,
+      );
+
       if (mounted) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (context) => const MainScreen()),
         );
       }
     } catch (e) {
+      String error = e.toString();
       setState(() {
-        _errorMessage = 'An error occurred during sign in: ${e.toString()}';
+        if (error.contains('invalid-email')) {
+          _emailError = 'Invalid email address.';
+        } else if (error.contains('user-not-found')) {
+          _emailError = 'No user found for this email.';
+        } else {
+          _passwordError = 'Incorrect password.';
+        }
+        _isLoading = false;
       });
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
     }
   }
 
@@ -118,39 +176,43 @@ class _LoginScreenState extends State<LoginScreen> {
               // Email field
               TextField(
                 controller: _emailController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Email',
                   border: OutlineInputBorder(),
-                  contentPadding: EdgeInsets.symmetric(
+                  contentPadding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 12,
                   ),
+                  errorText: _emailError,
                 ),
                 keyboardType: TextInputType.emailAddress,
+                style: const TextStyle(color: Colors.black),
               ),
               const SizedBox(height: 16),
 
               // Password field
               TextField(
                 controller: _passwordController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Password',
-                  border: OutlineInputBorder(),
-                  contentPadding: EdgeInsets.symmetric(
+                  border: const OutlineInputBorder(),
+                  contentPadding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 12,
                   ),
+                  errorText: _passwordError,
                 ),
                 obscureText: true,
+                style: const TextStyle(color: Colors.black),
               ),
               const SizedBox(height: 8),
 
-              // Error message
-              if (_errorMessage != null)
+              // General error message
+              if (_generalError != null)
                 Padding(
                   padding: const EdgeInsets.only(top: 8.0),
                   child: Text(
-                    _errorMessage!,
+                    _generalError!,
                     style: const TextStyle(color: Colors.red),
                   ),
                 ),

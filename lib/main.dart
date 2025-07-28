@@ -5,7 +5,6 @@ import 'package:fyp/screens/kitchen_screen.dart';
 import 'package:fyp/screens/login_screen.dart';
 import 'package:fyp/screens/order_status_screen.dart';
 import 'package:fyp/screens/profile_screen.dart';
-import 'package:fyp/screens/shared_table_screen.dart';
 import 'package:fyp/screens/staff_screen.dart';
 import 'package:fyp/screens/table_reservation_screen.dart';
 import 'package:fyp/theme.dart';
@@ -15,17 +14,14 @@ import 'state/cart_provider.dart';
 import 'state/order_provider.dart';
 import 'state/reservation_provider.dart';
 import 'state/theme_provider.dart';
-import 'state/table_state.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'firebase_options.dart';
 import 'services/hive_service.dart';
 import 'services/api_service.dart';
 import 'services/reservation_service.dart';
-import 'services/shared_table_service.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'models/menu_item.dart';
-import 'models/shared_table.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -39,7 +35,6 @@ void main() async {
   // Clear any corrupted Hive data
   try {
     await Hive.deleteBoxFromDisk('menu');
-    await Hive.deleteBoxFromDisk('shared_tables');
   } catch (e) {
     // Silently handle Hive data clearing errors
   }
@@ -48,36 +43,21 @@ void main() async {
   if (!Hive.isAdapterRegistered(1)) {
     Hive.registerAdapter(MenuItemAdapter());
   }
-  if (!Hive.isAdapterRegistered(2)) {
-    Hive.registerAdapter(TableStatusAdapter());
-  }
-  if (!Hive.isAdapterRegistered(3)) {
-    Hive.registerAdapter(SharedTableAdapter());
-  }
 
   // Initialize services after registering all adapters
   final hiveService = HiveService();
   await hiveService.init();
 
-  // Initialize SharedTableService
-  final sharedTableService = SharedTableService();
-  await sharedTableService.init();
-
   // Create an instance of ApiService with the HiveService as a dependency
   final apiService = ApiService(hiveService: hiveService);
 
-  runApp(MyApp(apiService: apiService, sharedTableService: sharedTableService));
+  runApp(MyApp(apiService: apiService));
 }
 
 class MyApp extends StatelessWidget {
   final ApiService apiService;
-  final SharedTableService sharedTableService;
 
-  const MyApp({
-    required this.apiService,
-    required this.sharedTableService,
-    Key? key,
-  }) : super(key: key);
+  const MyApp({required this.apiService, Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -87,7 +67,6 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => CartProvider()),
         ChangeNotifierProvider(create: (_) => OrderProvider()),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
-        ChangeNotifierProvider(create: (_) => TableState(sharedTableService)),
         ChangeNotifierProvider(
           create: (_) => ReservationProvider(ReservationService()),
         ),
@@ -125,11 +104,10 @@ class MyApp extends StatelessWidget {
               '/cart': (context) => MainScreen(initialIndex: 1),
               '/orders': (context) => MainScreen(initialIndex: 2),
               '/order-status': (context) => MainScreen(initialIndex: 2),
-              '/share': (context) => MainScreen(initialIndex: 3),
-              '/kitchen': (context) => MainScreen(initialIndex: 4),
-              '/staff': (context) => MainScreen(initialIndex: 5),
-              '/profile': (context) => MainScreen(initialIndex: 6),
-              '/reserve': (context) => MainScreen(initialIndex: 7),
+              '/kitchen': (context) => MainScreen(initialIndex: 3),
+              '/staff': (context) => MainScreen(initialIndex: 4),
+              '/profile': (context) => MainScreen(initialIndex: 5),
+              '/reserve': (context) => MainScreen(initialIndex: 6),
               '/login': (context) => const LoginScreen(),
             },
           );
@@ -161,7 +139,6 @@ class MainScreenState extends State<MainScreen> {
     HomeScreen(),
     CartScreen(),
     OrderStatusScreen(),
-    SharedTableScreen(),
     KitchenScreen(),
     StaffScreen(),
     ProfileScreen(),
@@ -191,10 +168,6 @@ class MainScreenState extends State<MainScreen> {
             label: 'Cart',
           ),
           BottomNavigationBarItem(icon: Icon(Icons.receipt), label: 'Orders'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.people),
-            label: 'Share Table',
-          ),
           BottomNavigationBarItem(icon: Icon(Icons.kitchen), label: 'Kitchen'),
           BottomNavigationBarItem(icon: Icon(Icons.badge), label: 'Staff'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),

@@ -73,9 +73,9 @@ class ReservationService {
           await _firestore
               .collection(_collection)
               .where('userId', isEqualTo: userId)
-              .orderBy('date', descending: false)
+              // .where('status', whereIn: ['pending', 'confirmed'])
+              // .orderBy('date', descending: false)
               .get();
-
       return snapshot.docs
           .map((doc) => Reservation.fromMap(doc.data()))
           .toList();

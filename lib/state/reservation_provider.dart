@@ -12,6 +12,8 @@ class ReservationProvider with ChangeNotifier {
 
   ReservationProvider(this._reservationService);
 
+  ReservationService get reservationService => _reservationService;
+
   // Getters
   List<Reservation> get reservations => _reservations;
   List<Reservation> get userReservations => _userReservations;

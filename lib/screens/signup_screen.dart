@@ -18,11 +18,11 @@ class _SignupScreenState extends State<SignupScreen> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController =
       TextEditingController();
-  String _selectedRole = 'customer'; // Default role
   bool _isLoading = false;
-  String? _errorMessage;
-
-  final List<String> _roles = ['customer', 'staff', 'kitchen', 'admin'];
+  String? _emailError;
+  String? _passwordError;
+  String? _confirmPasswordError;
+  String? _generalError;
 
   @override
   void dispose() {
@@ -33,43 +33,70 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 
   Future<void> _signUp() async {
-    // Validate passwords match
-    if (_passwordController.text != _confirmPasswordController.text) {
+    setState(() {
+      _isLoading = true;
+      _emailError = null;
+      _passwordError = null;
+      _confirmPasswordError = null;
+      _generalError = null;
+    });
+
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+    final confirmPassword = _confirmPasswordController.text.trim();
+    bool hasError = false;
+
+    // Local validation
+    if (email.isEmpty) {
+      _emailError = 'Email cannot be empty';
+      hasError = true;
+    } else if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(email)) {
+      _emailError = 'Invalid email format';
+      hasError = true;
+    }
+    if (password.isEmpty) {
+      _passwordError = 'Password cannot be empty';
+      hasError = true;
+    } else if (password.length < 6) {
+      _passwordError = 'Password must be at least 6 characters';
+      hasError = true;
+    }
+    if (confirmPassword != password) {
+      _confirmPasswordError = 'Passwords do not match';
+      hasError = true;
+    }
+    if (hasError) {
       setState(() {
-        _errorMessage = 'Passwords do not match';
+        _isLoading = false;
       });
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-
     try {
-      // Create user with email and password using AuthProvider
-      await Provider.of<auth.AppAuthProvider>(context, listen: false).signUp(
-        _emailController.text.trim(),
-        _passwordController.text.trim(),
-        _selectedRole,
-      );
+      await Provider.of<auth.AppAuthProvider>(
+        context,
+        listen: false,
+      ).signUp(email, password, 'customer'); // Force customer role
 
-      // Navigate to main screen on successful signup
       if (mounted) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (context) => const MainScreen()),
         );
       }
     } catch (e) {
+      String error = e.toString();
       setState(() {
-        _errorMessage = 'An error occurred during sign up: ${e.toString()}';
+        if (error.contains('invalid-email')) {
+          _emailError = 'Invalid email address.';
+        } else if (error.contains('email-already-in-use')) {
+          _emailError = 'This email is already in use.';
+        } else if (error.contains('weak-password')) {
+          _passwordError = 'Password is too weak.';
+        } else {
+          _generalError = 'An error occurred during sign up.';
+        }
+        _isLoading = false;
       });
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
     }
   }
 
@@ -119,88 +146,66 @@ class _SignupScreenState extends State<SignupScreen> {
               // Email field
               TextField(
                 controller: _emailController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Email',
-                  border: OutlineInputBorder(),
-                  contentPadding: EdgeInsets.symmetric(
+                  border: const OutlineInputBorder(),
+                  contentPadding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 12,
                   ),
+                  errorText: _emailError,
                 ),
                 keyboardType: TextInputType.emailAddress,
+                style: const TextStyle(color: Colors.black),
               ),
               const SizedBox(height: 16),
 
               // Password field
               TextField(
                 controller: _passwordController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Password',
-                  border: OutlineInputBorder(),
-                  contentPadding: EdgeInsets.symmetric(
+                  border: const OutlineInputBorder(),
+                  contentPadding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 12,
                   ),
+                  errorText: _passwordError,
                 ),
                 obscureText: true,
+                style: const TextStyle(color: Colors.black),
               ),
               const SizedBox(height: 16),
 
               // Confirm Password field
               TextField(
                 controller: _confirmPasswordController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Confirm Password',
-                  border: OutlineInputBorder(),
-                  contentPadding: EdgeInsets.symmetric(
+                  border: const OutlineInputBorder(),
+                  contentPadding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 12,
                   ),
+                  errorText: _confirmPasswordError,
                 ),
                 obscureText: true,
+                style: const TextStyle(color: Colors.black),
               ),
               const SizedBox(height: 16),
 
-              // Role selection dropdown
-              DropdownButtonFormField<String>(
-                decoration: const InputDecoration(
-                  labelText: 'Role',
-                  border: OutlineInputBorder(),
-                  contentPadding: EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                ),
-                value: _selectedRole,
-                items:
-                    _roles.map((role) {
-                      return DropdownMenuItem(
-                        value: role,
-                        child: Text(
-                          role.substring(0, 1).toUpperCase() +
-                              role.substring(1),
-                        ),
-                      );
-                    }).toList(),
-                onChanged: (value) {
-                  if (value != null) {
-                    setState(() {
-                      _selectedRole = value;
-                    });
-                  }
-                },
-              ),
-              const SizedBox(height: 8),
-
-              // Error message
-              if (_errorMessage != null)
+              // General error message
+              if (_generalError != null)
                 Padding(
                   padding: const EdgeInsets.only(top: 8.0),
                   child: Text(
-                    _errorMessage!,
+                    _generalError!,
                     style: const TextStyle(color: Colors.red),
                   ),
                 ),
+
+              // Role selection dropdown
+              // Removed as per edit hint
               const SizedBox(height: 24),
 
               // Sign Up button

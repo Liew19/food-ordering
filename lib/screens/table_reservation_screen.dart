@@ -6,6 +6,16 @@ import 'package:fyp/state/reservation_provider.dart';
 import 'package:fyp/widgets/food_app_bar.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:fyp/services/table_service.dart';
+import 'package:fyp/models/table.dart';
+
+// Place this at the top of the file, outside the class
+const List<String> timeSlots = [
+  '18:00–19:00',
+  '19:00–20:00',
+  '20:00–21:00',
+  '21:00–22:00',
+];
 
 class TableReservationScreen extends StatefulWidget {
   const TableReservationScreen({super.key});
@@ -16,25 +26,38 @@ class TableReservationScreen extends StatefulWidget {
 
 class _TableReservationScreenState extends State<TableReservationScreen> {
   DateTime? _selectedDate;
-  TimeOfDay? _selectedTime;
+  String? _selectedTimeSlot;
   int _numberOfGuests = 2;
   int? _selectedTableId;
   bool _showMyReservations = false;
 
-  final List<Map<String, dynamic>> _tables = [
-    {'id': 1, 'name': 'Table 1', 'seats': 2},
-    {'id': 2, 'name': 'Table 2', 'seats': 4},
-    {'id': 3, 'name': 'Table 3', 'seats': 6},
-    {'id': 4, 'name': 'Table 4', 'seats': 8},
-  ];
+  List<RestaurantTable> _tables = [];
+  bool _isLoadingTables = true;
+  String? _tableError;
+
+  Set<int> _reservedTableIds = {};
+  bool _isLoadingAvailability = false;
+
+  bool _hasLoadedReservations = false;
 
   @override
   void initState() {
     super.initState();
-    // 使用 addPostFrameCallback 确保在构建完成后加载数据
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadReservations();
+      _loadTables();
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final authProvider = Provider.of<auth.AppAuthProvider>(context);
+    if (authProvider.user != null && !_hasLoadedReservations) {
+      _hasLoadedReservations = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _loadReservations();
+      });
+    }
   }
 
   // Load reservations from Firestore
@@ -60,6 +83,27 @@ class _TableReservationScreenState extends State<TableReservationScreen> {
     }
   }
 
+  Future<void> _loadTables() async {
+    setState(() {
+      _isLoadingTables = true;
+      _tableError = null;
+    });
+    try {
+      final tables = await TableService().getTables();
+      if (mounted) {
+        setState(() {
+          _tables = tables;
+          _isLoadingTables = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _tableError = e.toString();
+        _isLoadingTables = false;
+      });
+    }
+  }
+
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -71,18 +115,7 @@ class _TableReservationScreenState extends State<TableReservationScreen> {
       setState(() {
         _selectedDate = picked;
       });
-    }
-  }
-
-  Future<void> _selectTime(BuildContext context) async {
-    final TimeOfDay? picked = await showTimePicker(
-      context: context,
-      initialTime: _selectedTime ?? TimeOfDay.now(),
-    );
-    if (picked != null && picked != _selectedTime) {
-      setState(() {
-        _selectedTime = picked;
-      });
+      await _fetchReservedTableIds();
     }
   }
 
@@ -105,7 +138,7 @@ class _TableReservationScreenState extends State<TableReservationScreen> {
     }
 
     if (_selectedDate == null ||
-        _selectedTime == null ||
+        _selectedTimeSlot == null ||
         _selectedTableId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -118,9 +151,9 @@ class _TableReservationScreenState extends State<TableReservationScreen> {
 
     // Check if selected table has enough seats
     final selectedTable = _tables.firstWhere(
-      (table) => table['id'] == _selectedTableId,
+      (table) => table.id == _selectedTableId,
     );
-    if (selectedTable['seats'] < _numberOfGuests) {
+    if (selectedTable.seats < _numberOfGuests) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
@@ -174,7 +207,7 @@ class _TableReservationScreenState extends State<TableReservationScreen> {
 
     // Format date and time for display
     final formattedDate = DateFormat('yyyy-MM-dd').format(_selectedDate!);
-    final formattedTime = _selectedTime!.format(context);
+    final formattedTime = _selectedTimeSlot!;
 
     // Show confirmation dialog
     if (mounted) {
@@ -189,12 +222,12 @@ class _TableReservationScreenState extends State<TableReservationScreen> {
                 children: [
                   Text('Date: $formattedDate'),
                   const SizedBox(height: 8),
-                  Text('Time: $formattedTime'),
+                  Text('Time Slot: $formattedTime'),
                   const SizedBox(height: 8),
                   Text('Number of Guests: $_numberOfGuests'),
                   const SizedBox(height: 8),
                   Text(
-                    'Table: ${selectedTable['name']} (${selectedTable['seats']} seats)',
+                    'Table: ${selectedTable.name} (${selectedTable.seats} seats)',
                   ),
                 ],
               ),
@@ -214,10 +247,10 @@ class _TableReservationScreenState extends State<TableReservationScreen> {
                       userName: user.displayName ?? 'User',
                       userEmail: user.email ?? '',
                       date: _selectedDate!,
-                      time: _selectedTime!.format(context),
+                      time: _selectedTimeSlot!,
                       numberOfGuests: _numberOfGuests,
                       tableId: _selectedTableId!,
-                      tableSeats: selectedTable['seats'],
+                      tableSeats: selectedTable.seats,
                       status: 'pending',
                       createdAt: DateTime.now(),
                     );
@@ -246,7 +279,7 @@ class _TableReservationScreenState extends State<TableReservationScreen> {
                         // Reset form
                         setState(() {
                           _selectedDate = null;
-                          _selectedTime = null;
+                          _selectedTimeSlot = null;
                           _numberOfGuests = 2;
                           _selectedTableId = null;
                         });
@@ -310,6 +343,46 @@ class _TableReservationScreenState extends State<TableReservationScreen> {
           ),
         );
       }
+    }
+  }
+
+  Future<void> _fetchReservedTableIds() async {
+    if (_selectedDate == null || _selectedTimeSlot == null) {
+      setState(() {
+        _reservedTableIds = {};
+      });
+      return;
+    }
+    setState(() {
+      _isLoadingAvailability = true;
+    });
+    try {
+      final reservationProvider = Provider.of<ReservationProvider>(
+        context,
+        listen: false,
+      );
+      final reservationService = reservationProvider.reservationService;
+      final allReservations = await reservationService.getAllReservations();
+      final reserved =
+          allReservations
+              .where(
+                (r) =>
+                    r.date.year == _selectedDate!.year &&
+                    r.date.month == _selectedDate!.month &&
+                    r.date.day == _selectedDate!.day &&
+                    r.time == _selectedTimeSlot,
+              )
+              .map((r) => r.tableId)
+              .toSet();
+      setState(() {
+        _reservedTableIds = reserved;
+        _isLoadingAvailability = false;
+      });
+    } catch (e) {
+      setState(() {
+        _reservedTableIds = {};
+        _isLoadingAvailability = false;
+      });
     }
   }
 
@@ -491,6 +564,13 @@ class _TableReservationScreenState extends State<TableReservationScreen> {
     final isStaff =
         authProvider.role == 'staff' || authProvider.role == 'admin';
 
+    if (user == null) {
+      return Scaffold(
+        appBar: FoodAppBar(showSearch: true, showCart: true),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
       appBar: FoodAppBar(showSearch: true, showCart: true),
       body: SingleChildScrollView(
@@ -612,43 +692,49 @@ class _TableReservationScreenState extends State<TableReservationScreen> {
 
                     const SizedBox(height: 16),
 
-                    // Time
+                    // Time Slot
                     const Text(
-                      'Time',
+                      'Time Slot',
                       style: TextStyle(
                         fontWeight: FontWeight.w500,
                         fontSize: 14,
                       ),
                     ),
                     const SizedBox(height: 8),
-                    InkWell(
-                      onTap: () => _selectTime(context),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 12,
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[200],
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: DropdownButton<String>(
+                        value: _selectedTimeSlot,
+                        isExpanded: true,
+                        underline: Container(),
+                        icon: Icon(
+                          Icons.arrow_drop_down,
+                          color: Colors.grey[600],
                         ),
-                        decoration: BoxDecoration(
-                          color: Colors.grey[200],
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              _selectedTime == null
-                                  ? '--:-- --'
-                                  : _selectedTime!.format(context),
-                              style: TextStyle(
-                                color:
-                                    _selectedTime == null
-                                        ? Colors.grey[600]
-                                        : Colors.black,
-                              ),
-                            ),
-                            Icon(Icons.access_time, color: Colors.grey[600]),
-                          ],
-                        ),
+                        items:
+                            timeSlots
+                                .map(
+                                  (slot) => DropdownMenuItem<String>(
+                                    value: slot,
+                                    child: Text(slot),
+                                  ),
+                                )
+                                .toList(),
+                        onChanged: (String? newValue) {
+                          if (newValue != null) {
+                            setState(() {
+                              _selectedTimeSlot = newValue;
+                            });
+                            _fetchReservedTableIds();
+                          }
+                        },
                       ),
                     ),
 
@@ -710,93 +796,113 @@ class _TableReservationScreenState extends State<TableReservationScreen> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    GridView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            childAspectRatio: 2,
-                            crossAxisSpacing: 10,
-                            mainAxisSpacing: 10,
+                    if (_isLoadingTables)
+                      const Center(child: CircularProgressIndicator())
+                    else if (_tableError != null)
+                      Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Text(
+                            'Error loading tables:  [38;5;9m$_tableError',
+                            style: const TextStyle(color: Colors.red),
                           ),
-                      itemCount: _tables.length,
-                      itemBuilder: (context, index) {
-                        final table = _tables[index];
-                        final isSelected = _selectedTableId == table['id'];
-
-                        // Determine if table has enough seats
-                        final bool hasEnoughSeats =
-                            table['seats'] >= _numberOfGuests;
-
-                        return InkWell(
-                          onTap:
-                              hasEnoughSeats
-                                  ? () {
-                                    setState(() {
-                                      _selectedTableId = table['id'];
-                                    });
-                                  }
-                                  : null,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color:
-                                  !hasEnoughSeats
-                                      ? Colors.grey[300]
-                                      : isSelected
-                                      ? Theme.of(
-                                        context,
-                                      ).primaryColor.withAlpha(25)
-                                      : Colors.grey[200],
-                              border:
-                                  isSelected
-                                      ? Border.all(
-                                        color: Theme.of(context).primaryColor,
-                                        width: 2,
-                                      )
-                                      : null,
-                              borderRadius: BorderRadius.circular(4),
+                        ),
+                      )
+                    else
+                      GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              childAspectRatio: 2,
+                              crossAxisSpacing: 10,
+                              mainAxisSpacing: 10,
                             ),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  table['name'],
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color:
-                                        !hasEnoughSeats
-                                            ? Colors.grey[500]
-                                            : isSelected
-                                            ? Theme.of(context).primaryColor
-                                            : Colors.black,
-                                  ),
+                        itemCount: _tables.length,
+                        itemBuilder: (context, index) {
+                          final table = _tables[index];
+                          final isSelected = _selectedTableId == table.id;
+                          final isReserved = _reservedTableIds.contains(
+                            table.id,
+                          );
+
+                          // Determine if table has enough seats
+                          final bool hasEnoughSeats =
+                              table.seats >= _numberOfGuests;
+
+                          return InkWell(
+                            onTap:
+                                !hasEnoughSeats || isReserved
+                                    ? null
+                                    : () {
+                                      setState(() {
+                                        _selectedTableId = table.id;
+                                      });
+                                    },
+                            child: Container(
+                              margin: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color:
+                                    isSelected
+                                        ? Theme.of(
+                                          context,
+                                        ).primaryColor.withAlpha(40)
+                                        : Colors.white,
+                                border: Border.all(
+                                  color:
+                                      isSelected
+                                          ? Theme.of(context).primaryColor
+                                          : Colors.grey[300]!,
+                                  width: 2,
                                 ),
-                                Text(
-                                  '${table['seats']} seats',
-                                  style: TextStyle(
-                                    color:
-                                        !hasEnoughSeats
-                                            ? Colors.grey[500]
-                                            : isSelected
-                                            ? Theme.of(context).primaryColor
-                                            : Colors.grey[600],
-                                  ),
-                                ),
-                                if (!hasEnoughSeats)
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
                                   Text(
-                                    'Not enough seats',
+                                    table.name,
                                     style: TextStyle(
-                                      fontSize: 10,
-                                      color: Colors.red[300],
+                                      fontWeight: FontWeight.bold,
+                                      color:
+                                          !hasEnoughSeats || isReserved
+                                              ? Colors.grey[500]
+                                              : isSelected
+                                              ? Theme.of(context).primaryColor
+                                              : Colors.black,
                                     ),
                                   ),
-                              ],
+                                  Text(
+                                    '${table.seats} seats',
+                                    style: TextStyle(
+                                      color:
+                                          !hasEnoughSeats || isReserved
+                                              ? Colors.grey[500]
+                                              : isSelected
+                                              ? Theme.of(context).primaryColor
+                                              : Colors.grey[600],
+                                    ),
+                                  ),
+                                  if (!hasEnoughSeats || isReserved)
+                                    Text(
+                                      isReserved
+                                          ? 'Reserved'
+                                          : 'Not enough seats',
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        color:
+                                            isReserved
+                                                ? Colors.red[300]
+                                                : Colors.grey[500],
+                                      ),
+                                    ),
+                                ],
+                              ),
                             ),
-                          ),
-                        );
-                      },
-                    ),
+                          );
+                        },
+                      ),
 
                     const SizedBox(height: 24),
 
