@@ -4,63 +4,52 @@ import 'package:fyp/state/order_provider.dart';
 import 'package:provider/provider.dart';
 import '../state/cart_provider.dart';
 import '../widgets/food_app_bar.dart';
+import '../state/billing_function.dart';
+import 'package:flutter_stripe/flutter_stripe.dart' as stripe;
 
 class CartScreen extends StatelessWidget {
   const CartScreen({super.key});
 
-  void _showOrderConfirmation(
+  Future<void> _payAndPlaceOrder(
     BuildContext context,
     CartProvider cartProvider,
     double total,
   ) {
-    showDialog(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('Confirm Order'),
-            content: const Text('Are you sure you want to place this order?'),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: const Text('Cancel'),
+    final billing = BillingFunctions();
+    Map<String, dynamic>? intentPaymentData;
+    return billing.paymentSheetInitialization(
+      context,
+      total,
+      'myr',
+      intentPaymentData,
+      (data) => intentPaymentData = data,
+      () async {
+        // Present the payment sheet and, on success, place the order locally
+        // We intentionally avoid calling billing.showPaymentSheet to skip any Firebase dependency here
+        try {
+          await stripe.Stripe.instance.presentPaymentSheet();
+
+          final order = Order(
+            id: DateTime.now().millisecondsSinceEpoch.toString(),
+            items: List.from(cartProvider.cartItems),
+            totalPrice: total,
+            status: OrderStatus.pending,
+            createdAt: DateTime.now(),
+          );
+
+          Provider.of<OrderProvider>(context, listen: false).addOrder(order);
+          cartProvider.clearCart();
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Payment successful. Order placed!'),
+                backgroundColor: Colors.green,
               ),
-              TextButton(
-                onPressed: () {
-                  final order = Order(
-                    id: DateTime.now().millisecondsSinceEpoch.toString(),
-                    items: List.from(cartProvider.cartItems),
-                    totalPrice:
-                        total, // This now includes subtotal + service tax only
-                    status: OrderStatus.pending,
-                    createdAt: DateTime.now(),
-                  );
-
-                  Provider.of<OrderProvider>(
-                    context,
-                    listen: false,
-                  ).addOrder(order);
-
-                  cartProvider.clearCart();
-                  Navigator.pop(context); // Close dialog
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Order placed successfully!'),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
-
-                  Navigator.pushReplacementNamed(context, '/order-status');
-                },
-                child: Text(
-                  'Confirm',
-                  style: TextStyle(color: Theme.of(context).primaryColor),
-                ),
-              ),
-            ],
-          ),
+            );
+            Navigator.pushReplacementNamed(context, '/order-status');
+          }
+        } catch (_) {}
+      },
     );
   }
 
@@ -342,11 +331,8 @@ class CartScreen extends StatelessWidget {
                   onPressed:
                       cartProvider.cartItems.isEmpty
                           ? null
-                          : () => _showOrderConfirmation(
-                            context,
-                            cartProvider,
-                            total,
-                          ),
+                          : () =>
+                              _payAndPlaceOrder(context, cartProvider, total),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Theme.of(context).primaryColor,
                     padding: const EdgeInsets.symmetric(vertical: 16),
