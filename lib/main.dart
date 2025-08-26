@@ -22,9 +22,22 @@ import 'services/api_service.dart';
 import 'services/reservation_service.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'models/menu_item.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_stripe/flutter_stripe.dart' as stripe;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Load environment variables
+  try {
+    await dotenv.load(fileName: ".env");
+
+    // Configure Stripe publishable key and apply settings
+    stripe.Stripe.publishableKey = dotenv.env['STRIPE_PUBLISHABLE_KEY'] ?? '';
+    await stripe.Stripe.instance.applySettings();
+  } catch (e) {
+    debugPrint('Initialization error (dotenv/Stripe): $e');
+  }
 
   // Initialize Firebase with the options for your app
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
