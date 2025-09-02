@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fyp/screens/admin_notifications_screen.dart';
 import 'package:fyp/screens/admin_role_management_screen.dart';
+import 'package:fyp/screens/admin_menu_management_screen.dart';
 import 'package:fyp/widgets/food_app_bar.dart';
 import 'package:provider/provider.dart';
 import 'package:fyp/state/auth_provider.dart' as auth;
@@ -228,16 +229,20 @@ class ProfileScreen extends StatelessWidget {
                 },
               ),
 
-            _buildSettingItem(
-              context,
-              icon: Icons.settings,
-              title: 'Settings',
-              onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Settings coming soon')),
-                );
-              },
-            ),
+            // Menu management (only for admin)
+            if (userRole == 'admin')
+              _buildSettingItem(
+                context,
+                icon: Icons.restaurant_menu,
+                title: 'Manage Menu',
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const AdminMenuManagementScreen(),
+                    ),
+                  );
+                },
+              ),
 
             const Divider(),
 

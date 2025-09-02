@@ -1,4 +1,5 @@
 import 'package:hive/hive.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 part 'menu_item.g.dart';
 
@@ -26,6 +27,10 @@ class MenuItem {
   final double preparationTime;
   @HiveField(10)
   final bool canPrepareInParallel;
+  @HiveField(11)
+  final bool isDeleted;
+  @HiveField(12)
+  final DateTime? deletedAt;
 
   MenuItem({
     required this.id,
@@ -39,58 +44,41 @@ class MenuItem {
     this.isPopular = false,
     required this.preparationTime,
     this.canPrepareInParallel = true,
+    this.isDeleted = false,
+    this.deletedAt,
   });
 
-  // Get the asset path for local images
-  String get imagePath {
-    // Special cases mapping for exact matches
-    final Map<String, String> specialCases = {
-      // Main courses
-      'Grilled Salmon': 'grilledSalmon.jpg',
-      'Classic Burger': 'classicBurger.jpg',
-      'Pizza': 'pizza.jpg',
-      'Margherita Pizza': 'pizza.jpg',
-      'Steak': 'Steak.jpg',
-      'Grilled Steak': 'Steak.jpg',
+  // Check if item has a valid Cloudinary image URL
+  bool get hasCloudinaryImage =>
+      imageUrl.isNotEmpty && imageUrl.contains('cloudinary.com');
 
-      // Salads
-      'Greek Salad': 'greekSalad.jpg',
-      'Caesar Salad': 'CaesarSalad.jpg',
-      'Caesar Salad with Grilled Chicken': 'CaesarSalad.jpg',
+  // Get optimized Cloudinary URL for different display sizes
+  String getOptimizedImageUrl({int? width, int? height, int quality = 80}) {
+    if (!hasCloudinaryImage) return imageUrl;
 
-      // Desserts
-      'Ice Cream': 'IceCream.jpg',
-      'Chocolate Cake': 'chocolateCake.jpg',
+    // Extract public ID from Cloudinary URL for optimization
+    final uri = Uri.parse(imageUrl);
+    if (uri.host.contains('cloudinary.com')) {
+      final pathSegments = uri.pathSegments;
+      if (pathSegments.length >= 3) {
+        final publicId = pathSegments.sublist(3).join('/');
+        final cloudName = pathSegments[0]; // Should be the cloud name
 
-      // Beverages
-      'Sky Juice': 'skyjuice.jpg',
-      'Orange Juice': 'orangejuice.jpg',
-      'Americano': 'americano.jpg',
-    };
+        List<String> transformations = [];
+        if (width != null) transformations.add('w_$width');
+        if (height != null) transformations.add('h_$height');
+        transformations.add('q_$quality');
+        transformations.add('f_auto'); // Auto format selection
+        transformations.add(
+          'c_fill',
+        ); // Fill mode for better aspect ratio handling
 
-    // Check for special cases first (case-insensitive)
-    String normalizedName = name.toLowerCase();
-    for (var entry in specialCases.entries) {
-      if (entry.key.toLowerCase() == normalizedName) {
-        return 'assets/images/${entry.value}';
+        String transformation = transformations.join(',');
+        return 'https://res.cloudinary.com/$cloudName/image/upload/$transformation/$publicId';
       }
     }
 
-    // For items not in special cases, try to find a suitable default image based on category
-    switch (category.toLowerCase()) {
-      case 'main course':
-        return 'assets/images/Steak.jpg';
-      case 'beverage':
-        return 'assets/images/skyjuice.jpg';
-      case 'salad':
-        return 'assets/images/CaesarSalad.jpg';
-      case 'dessert':
-        return 'assets/images/IceCream.jpg';
-      default:
-        // Use a default image name based on the item name
-        String fileName = name.replaceAll(' ', '');
-        return 'assets/images/$fileName.jpg';
-    }
+    return imageUrl; // Return original if not a standard Cloudinary URL
   }
 
   factory MenuItem.fromJson(Map<String, dynamic> json) {
@@ -108,6 +96,11 @@ class MenuItem {
       isPopular: json['isPopular'] as bool? ?? false,
       preparationTime: (json['preparationTime'] as num).toDouble(),
       canPrepareInParallel: json['canPrepareInParallel'] as bool? ?? true,
+      isDeleted: json['isDeleted'] as bool? ?? false,
+      deletedAt:
+          json['deletedAt'] != null
+              ? (json['deletedAt'] as Timestamp).toDate()
+              : null,
     );
   }
 }
