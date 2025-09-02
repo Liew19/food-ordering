@@ -27,14 +27,16 @@ class MenuItemAdapter extends TypeAdapter<MenuItem> {
       rating: fields[7] as double?,
       isPopular: fields[8] as bool,
       preparationTime: fields[9] as double,
-      canPrepareInParallel: fields.containsKey(10) ? fields[10] as bool : true,
+      canPrepareInParallel: fields[10] as bool,
+      isDeleted: fields[11] as bool,
+      deletedAt: fields[12] as DateTime?,
     );
   }
 
   @override
   void write(BinaryWriter writer, MenuItem obj) {
     writer
-      ..writeByte(11)
+      ..writeByte(13)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -56,7 +58,11 @@ class MenuItemAdapter extends TypeAdapter<MenuItem> {
       ..writeByte(9)
       ..write(obj.preparationTime)
       ..writeByte(10)
-      ..write(obj.canPrepareInParallel);
+      ..write(obj.canPrepareInParallel)
+      ..writeByte(11)
+      ..write(obj.isDeleted)
+      ..writeByte(12)
+      ..write(obj.deletedAt);
   }
 
   @override

@@ -67,10 +67,7 @@ class MenuItemCard extends StatelessWidget {
                       ),
                     ),
 
-                    // Preparation time
-                    const SizedBox(height: 2),
-                    _buildPrepTimeIndicator(context, isDesktop, isDarkMode),
-
+                    // Preparation time removed - only for algorithm use
                     const Spacer(),
                     // Add to cart button
                     _buildAddToCartButton(context, isDesktop),
@@ -89,15 +86,19 @@ class MenuItemCard extends StatelessWidget {
     bool isDesktop,
     bool isDarkMode,
   ) {
-    if (item.imageUrl.isNotEmpty) {
+    // Use optimized Cloudinary URL if available
+    if (item.hasCloudinaryImage) {
+      final optimizedUrl = item.getOptimizedImageUrl(
+        width: isDesktop ? 280 : 200,
+        height: isDesktop ? 140 : 100,
+        quality: 85,
+      );
+
       return Image.network(
-        item.imageUrl,
+        optimizedUrl,
         height: isDesktop ? 140 : 100,
         width: double.infinity,
         fit: BoxFit.cover,
-        // Add caching
-        cacheWidth: isDesktop ? 280 : 200,
-        cacheHeight: isDesktop ? 280 : 200,
         // Add loading placeholder
         loadingBuilder: (context, child, loadingProgress) {
           if (loadingProgress == null) return child;
@@ -117,30 +118,13 @@ class MenuItemCard extends StatelessWidget {
           );
         },
         errorBuilder: (context, error, stackTrace) {
-          // Fallback to local image if network image fails
-          return Image.asset(
-            item.imagePath,
-            height: isDesktop ? 140 : 100,
-            width: double.infinity,
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) {
-              return _buildErrorPlaceholder(context, isDesktop, isDarkMode);
-            },
-          );
+          return _buildErrorPlaceholder(context, isDesktop, isDarkMode);
         },
       );
     }
 
-    // If no network image URL, try local image
-    return Image.asset(
-      item.imagePath,
-      height: isDesktop ? 140 : 100,
-      width: double.infinity,
-      fit: BoxFit.cover,
-      errorBuilder: (context, error, stackTrace) {
-        return _buildErrorPlaceholder(context, isDesktop, isDarkMode);
-      },
-    );
+    // Show placeholder if no Cloudinary image
+    return _buildErrorPlaceholder(context, isDesktop, isDarkMode);
   }
 
   // Extract error placeholder as a separate method
@@ -199,30 +183,7 @@ class MenuItemCard extends StatelessWidget {
     );
   }
 
-  Widget _buildPrepTimeIndicator(
-    BuildContext context,
-    bool isDesktop,
-    bool isDarkMode,
-  ) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(
-          Icons.access_time,
-          size: isDesktop ? 14 : 12,
-          color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-        ),
-        SizedBox(width: isDesktop ? 4 : 2),
-        Text(
-          "${item.preparationTime}min",
-          style: TextStyle(
-            fontSize: isDesktop ? 12 : 10,
-            color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-          ),
-        ),
-      ],
-    );
-  }
+  // Preparation time indicator removed - only used for algorithm, not customer display
 
   Widget _buildAddToCartButton(BuildContext context, bool isDesktop) {
     return SizedBox(

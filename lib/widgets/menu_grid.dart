@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../models/menu_item.dart';
 import '../state/cart_provider.dart';
 import 'menu_item_detail_dialog.dart';
@@ -21,20 +22,20 @@ class MenuGrid extends StatelessWidget {
 
     if (screenWidth > 1200) {
       crossAxisCount = 4; // Large screens: 4 columns
-      childAspectRatio = 0.8;
+      childAspectRatio = 0.85;
     } else if (screenWidth > 900) {
       crossAxisCount = 3; // Medium screens: 3 columns
-      childAspectRatio = 0.8;
+      childAspectRatio = 0.85;
     } else if (screenWidth > 600) {
       crossAxisCount = 2; // Small screens: 2 columns
-      childAspectRatio = 0.8;
+      childAspectRatio = 0.85;
     } else {
       crossAxisCount = 2; // Very small screens: 2 columns
-      childAspectRatio = 0.75;
+      childAspectRatio = 0.8;
     }
 
     return GridView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -65,38 +66,69 @@ class MenuGrid extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                  flex: 3,
+                  flex: 2,
                   child: Stack(
                     children: [
                       ClipRRect(
                         borderRadius: const BorderRadius.vertical(
                           top: Radius.circular(15),
                         ),
-                        child: Image.network(
-                          item.imageUrl,
-                          width: double.infinity,
-                          height: double.infinity,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Image.asset(
-                              item.imagePath,
-                              width: double.infinity,
-                              height: double.infinity,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return Container(
+                        child:
+                            item.hasCloudinaryImage
+                                ? CachedNetworkImage(
+                                  imageUrl: item.getOptimizedImageUrl(
+                                    width: 300,
+                                    height: 200,
+                                    quality: 85,
+                                  ),
+                                  width: double.infinity,
+                                  height: double.infinity,
+                                  fit: BoxFit.cover,
+                                  placeholder:
+                                      (context, url) => Container(
+                                        color: Colors.grey[200],
+                                        child: const Center(
+                                          child: CircularProgressIndicator(),
+                                        ),
+                                      ),
+                                  errorWidget:
+                                      (context, url, error) => Container(
+                                        color: Colors.grey[200],
+                                        child: const Center(
+                                          child: Icon(
+                                            Icons.image_not_supported,
+                                            color: Colors.grey,
+                                            size: 40,
+                                          ),
+                                        ),
+                                      ),
+                                  memCacheWidth: 300,
+                                  memCacheHeight: 200,
+                                )
+                                : Container(
                                   color: Colors.grey[200],
                                   child: const Center(
-                                    child: Icon(
-                                      Icons.image_not_supported,
-                                      color: Colors.grey,
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          Icons.add_photo_alternate,
+                                          color: Colors.grey,
+                                          size: 40,
+                                        ),
+                                        SizedBox(height: 8),
+                                        Text(
+                                          'No Image',
+                                          style: TextStyle(
+                                            color: Colors.grey,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                );
-                              },
-                            );
-                          },
-                        ),
+                                ),
                       ),
                       Positioned(
                         top: 8,
@@ -126,60 +158,44 @@ class MenuGrid extends StatelessWidget {
                   ),
                 ),
                 Expanded(
-                  flex: 2,
+                  flex: 3,
                   child: Padding(
                     padding: const EdgeInsets.all(8),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(
-                          item.name,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
+                        Flexible(
+                          child: Text(
+                            item.name,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: 2),
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.access_time,
-                              size: 12,
-                              color: Colors.grey[600],
-                            ),
-                            const SizedBox(width: 2),
-                            Text(
-                              '${item.preparationTime}min',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                          ],
-                        ),
+                        const SizedBox(height: 4),
                         const Spacer(),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              'RM ${item.price.toStringAsFixed(2)}',
-                              style: const TextStyle(
-                                color: Color(
-                                  0xFFE53935,
-                                ), // Changed from blue to red
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13,
+                            Flexible(
+                              child: Text(
+                                'RM ${item.price.toStringAsFixed(2)}',
+                                style: const TextStyle(
+                                  color: Color(0xFFE53935),
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                ),
                               ),
                             ),
                             Container(
                               width: 24,
                               height: 24,
                               decoration: const BoxDecoration(
-                                color: Color(
-                                  0xFFE53935,
-                                ), // Changed from blue to red
+                                color: Color(0xFFE53935),
                                 shape: BoxShape.circle,
                               ),
                               child: IconButton(

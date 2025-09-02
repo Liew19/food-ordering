@@ -52,45 +52,113 @@ class MenuItemDetailDialog extends StatelessWidget {
                     builder: (context, value, child) {
                       return Opacity(opacity: value, child: child);
                     },
-                    child: Image.network(
-                      item.imageUrl,
-                      height: isDesktop ? 200 : 150,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          height: isDesktop ? 200 : 150,
-                          color:
-                              isDarkMode ? Colors.grey[800] : Colors.grey[300],
-                          child: Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.image_not_supported,
-                                  size: isDesktop ? 50 : 40,
+                    child:
+                        item.hasCloudinaryImage
+                            ? Image.network(
+                              item.getOptimizedImageUrl(
+                                width: isDesktop ? 500 : 350,
+                                height: isDesktop ? 200 : 150,
+                                quality: 90,
+                              ),
+                              height: isDesktop ? 200 : 150,
+                              width: double.infinity,
+                              fit: BoxFit.cover,
+                              loadingBuilder: (
+                                context,
+                                child,
+                                loadingProgress,
+                              ) {
+                                if (loadingProgress == null) return child;
+                                return Container(
+                                  height: isDesktop ? 200 : 150,
                                   color:
                                       isDarkMode
-                                          ? Colors.grey[400]
-                                          : Colors.grey[600],
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'Image Error!',
-                                  style: TextStyle(
-                                    fontSize: isDesktop ? 16 : 14,
-                                    color:
-                                        isDarkMode
-                                            ? AppTheme.textDarkColor
-                                            : AppTheme.textLightColor,
+                                          ? Colors.grey[800]
+                                          : Colors.grey[300],
+                                  child: Center(
+                                    child: CircularProgressIndicator(
+                                      value:
+                                          loadingProgress.expectedTotalBytes !=
+                                                  null
+                                              ? loadingProgress
+                                                      .cumulativeBytesLoaded /
+                                                  loadingProgress
+                                                      .expectedTotalBytes!
+                                              : null,
+                                    ),
                                   ),
+                                );
+                              },
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  height: isDesktop ? 200 : 150,
+                                  color:
+                                      isDarkMode
+                                          ? Colors.grey[800]
+                                          : Colors.grey[300],
+                                  child: Center(
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          Icons.image_not_supported,
+                                          size: isDesktop ? 50 : 40,
+                                          color:
+                                              isDarkMode
+                                                  ? Colors.grey[400]
+                                                  : Colors.grey[600],
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          'Image Error!',
+                                          style: TextStyle(
+                                            fontSize: isDesktop ? 16 : 14,
+                                            color:
+                                                isDarkMode
+                                                    ? AppTheme.textDarkColor
+                                                    : AppTheme.textLightColor,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              },
+                            )
+                            : Container(
+                              height: isDesktop ? 200 : 150,
+                              color:
+                                  isDarkMode
+                                      ? Colors.grey[800]
+                                      : Colors.grey[300],
+                              child: Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.add_photo_alternate,
+                                      size: isDesktop ? 50 : 40,
+                                      color:
+                                          isDarkMode
+                                              ? Colors.grey[400]
+                                              : Colors.grey[600],
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      'No Image Available',
+                                      style: TextStyle(
+                                        fontSize: isDesktop ? 16 : 14,
+                                        color:
+                                            isDarkMode
+                                                ? AppTheme.textDarkColor
+                                                : AppTheme.textLightColor,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ],
+                              ),
                             ),
-                          ),
-                        );
-                      },
-                    ),
                   ),
                   // Close button
                   Positioned(
@@ -176,30 +244,7 @@ class MenuItemDetailDialog extends StatelessWidget {
                           const SizedBox(height: 16),
 
                           // Preparation time
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.access_time,
-                                size: isDesktop ? 18 : 16,
-                                color:
-                                    isDarkMode
-                                        ? Colors.grey[400]
-                                        : Colors.grey[600],
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                "Preparation Time: ${item.preparationTime} minutes",
-                                style: TextStyle(
-                                  fontSize: isDesktop ? 14 : 12,
-                                  color:
-                                      isDarkMode
-                                          ? Colors.grey[400]
-                                          : Colors.grey[600],
-                                ),
-                              ),
-                            ],
-                          ),
-
+                          // Preparation time removed - only used for algorithm, not customer display
                           if (item.rating != null) ...[
                             const SizedBox(height: 12),
                             Row(

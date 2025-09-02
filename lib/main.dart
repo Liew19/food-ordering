@@ -7,6 +7,8 @@ import 'package:fyp/screens/order_status_screen.dart';
 import 'package:fyp/screens/profile_screen.dart';
 import 'package:fyp/screens/staff_screen.dart';
 import 'package:fyp/screens/table_reservation_screen.dart';
+import 'package:fyp/screens/image_upload_example_screen.dart';
+
 import 'package:fyp/theme.dart';
 import 'package:provider/provider.dart';
 import 'state/auth_provider.dart' as auth;
@@ -20,6 +22,7 @@ import 'firebase_options.dart';
 import 'services/hive_service.dart';
 import 'services/api_service.dart';
 import 'services/reservation_service.dart';
+import 'services/migration_service.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'models/menu_item.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -30,17 +33,34 @@ void main() async {
 
   // Load environment variables
   try {
-    await dotenv.load(fileName: ".env");
+    await dotenv.load(fileName: "env.txt");
+    debugPrint('✅ Environment variables loaded successfully');
+    debugPrint(
+      '   CLOUDINARY_CLOUD_NAME: ${dotenv.env['CLOUDINARY_CLOUD_NAME']}',
+    );
+    debugPrint(
+      '   CLOUDINARY_UPLOAD_PRESET: ${dotenv.env['CLOUDINARY_UPLOAD_PRESET']}',
+    );
 
     // Configure Stripe publishable key and apply settings
     stripe.Stripe.publishableKey = dotenv.env['STRIPE_PUBLISHABLE_KEY'] ?? '';
     await stripe.Stripe.instance.applySettings();
   } catch (e) {
-    debugPrint('Initialization error (dotenv/Stripe): $e');
+    debugPrint('❌ Initialization error (dotenv/Stripe): $e');
+    // Initialize dotenv with empty map if loading fails
+    dotenv.testLoad(fileInput: '');
   }
 
   // Initialize Firebase with the options for your app
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // Run one-time migration for soft delete functionality
+  try {
+    await MigrationService.migrateMenuItemsForSoftDelete();
+  } catch (e) {
+    debugPrint('⚠️ Migration warning: $e');
+    // Don't block app startup if migration fails
+  }
 
   // Initialize Hive and register adapters
   await Hive.initFlutter();
@@ -121,6 +141,9 @@ class MyApp extends StatelessWidget {
               '/staff': (context) => MainScreen(initialIndex: 4),
               '/profile': (context) => MainScreen(initialIndex: 5),
               '/reserve': (context) => MainScreen(initialIndex: 6),
+              '/image-upload-example':
+                  (context) => const ImageUploadExampleScreen(),
+
               '/login': (context) => const LoginScreen(),
             },
           );

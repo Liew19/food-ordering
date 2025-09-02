@@ -118,19 +118,62 @@ class _SpecialMenuCarouselState extends State<SpecialMenuCarousel>
               fit: StackFit.expand,
               children: [
                 // Image layer
-                Image.asset(
-                  menu.imagePath,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
+                menu.hasCloudinaryImage
+                    ? Image.network(
+                      menu.getOptimizedImageUrl(
+                        width: 400,
+                        height: 300,
+                        quality: 90,
+                      ),
+                      fit: BoxFit.cover,
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Container(
+                          color: Colors.grey[300],
+                          child: Center(
+                            child: CircularProgressIndicator(
+                              value:
+                                  loadingProgress.expectedTotalBytes != null
+                                      ? loadingProgress.cumulativeBytesLoaded /
+                                          loadingProgress.expectedTotalBytes!
+                                      : null,
+                            ),
+                          ),
+                        );
+                      },
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: Colors.grey[300],
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.error_outline, size: 40),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Image not found',
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    )
+                    : Container(
                       color: Colors.grey[300],
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.error_outline, size: 40),
+                          const Icon(
+                            Icons.add_photo_alternate,
+                            size: 40,
+                            color: Colors.grey,
+                          ),
                           const SizedBox(height: 8),
                           Text(
-                            'Image not found',
+                            'No Image Available',
                             style: TextStyle(
                               color: Colors.grey[600],
                               fontSize: 14,
@@ -138,9 +181,7 @@ class _SpecialMenuCarouselState extends State<SpecialMenuCarousel>
                           ),
                         ],
                       ),
-                    );
-                  },
-                ),
+                    ),
                 // Gradient overlay layer
                 Container(
                   decoration: BoxDecoration(

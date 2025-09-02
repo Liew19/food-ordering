@@ -3,7 +3,7 @@ import 'package:fyp/models/reservation.dart';
 import 'package:fyp/services/reservation_service.dart';
 import 'package:fyp/state/auth_provider.dart' as auth;
 import 'package:fyp/state/reservation_provider.dart';
-import 'package:fyp/widgets/food_app_bar.dart';
+
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:fyp/services/table_service.dart';
@@ -566,28 +566,43 @@ class _TableReservationScreenState extends State<TableReservationScreen> {
 
     if (user == null) {
       return Scaffold(
-        appBar: FoodAppBar(showSearch: true, showCart: true),
+        appBar: AppBar(
+          title: const Text(
+            'Table Reservation',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+          backgroundColor: Theme.of(context).primaryColor,
+          elevation: 4.0,
+          iconTheme: const IconThemeData(color: Colors.white),
+        ),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
 
     return Scaffold(
-      appBar: FoodAppBar(showSearch: true, showCart: true),
+      appBar: AppBar(
+        title: const Text(
+          'Table Reservation',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Theme.of(context).primaryColor,
+        elevation: 4.0,
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Title and toggle button
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Table Reservation',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  if (isStaff)
+            // Toggle button for staff (moved to top)
+            if (isStaff)
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
                     TextButton.icon(
                       onPressed: () async {
                         setState(() {
@@ -604,9 +619,9 @@ class _TableReservationScreenState extends State<TableReservationScreen> {
                         _showMyReservations ? 'Show All' : 'My Reservations',
                       ),
                     ),
-                ],
+                  ],
+                ),
               ),
-            ),
 
             // Existing reservations section
             if (user != null) ...[
