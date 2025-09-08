@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:fyp/services/order_service.dart';
 import 'package:fyp/state/order_provider.dart';
 import 'package:fyp/models/order.dart';
 import 'package:fyp/models/menu_item.dart';
@@ -19,6 +20,7 @@ class StaffScreen extends StatefulWidget {
 class StaffScreenState extends State<StaffScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  final OrderService _orderService = OrderService();
 
   @override
   void initState() {
@@ -34,8 +36,6 @@ class StaffScreenState extends State<StaffScreen>
 
   @override
   Widget build(BuildContext context) {
-    final orderProvider = Provider.of<OrderProvider>(context);
-
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: const FoodAppBar(showSearch: true, showCart: false),
@@ -73,15 +73,36 @@ class StaffScreenState extends State<StaffScreen>
             child: TabBarView(
               controller: _tabController,
               children: [
-                // Active Orders Tab
-                _buildOrderList(
-                  orderProvider.getActiveStaffOrders(),
-                  showActions: true,
+                // Active Orders Tab (real-time)
+                StreamBuilder<List<Order>>(
+                  stream: _orderService.getStaffOrders(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    if (snapshot.hasError) {
+                      return Center(child: Text('Error: ${snapshot.error}'));
+                    }
+                    final orders = snapshot.data ?? [];
+                    if (orders.isEmpty) {
+                      return const Center(
+                        child: Text(
+                          'No active orders',
+                          style: TextStyle(fontSize: 18, color: Colors.grey),
+                        ),
+                      );
+                    }
+                    return _buildOrderList(orders, showActions: true);
+                  },
                 ),
                 // Completed Orders Tab
-                _buildOrderList(
-                  orderProvider.getCompletedStaffOrders(),
-                  showActions: false,
+                Consumer<OrderProvider>(
+                  builder: (context, orderProvider, child) {
+                    return _buildOrderList(
+                      orderProvider.getCompletedStaffOrders(),
+                      showActions: false,
+                    );
+                  },
                 ),
               ],
             ),
@@ -293,33 +314,27 @@ class StaffScreenState extends State<StaffScreen>
                         ),
                       ),
                       const SizedBox(height: 8),
+                      // Single list with inline controls on the right
                       ...order.items
                           .where((item) => _isStaffItem(item.item))
                           .map(
                             (item) => Padding(
                               padding: const EdgeInsets.only(bottom: 8),
                               child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
-                                  const Text('•'),
-                                  const SizedBox(width: 8),
                                   Expanded(
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          '${item.quantity} × ${item.item.name}',
-                                          style: const TextStyle(fontSize: 14),
-                                        ),
-                                        // Add status badge for this item
-                                        ItemStatusBadge(
-                                          orderId: order.id,
-                                          itemId: item.item.id,
-                                          isKitchen: false,
-                                        ),
-                                      ],
+                                    child: Text(
+                                      '${item.quantity} × ${item.item.name}',
+                                      style: const TextStyle(fontSize: 14),
                                     ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  ItemStatusBadge(
+                                    orderId: order.id,
+                                    itemId: item.item.id,
+                                    isKitchen: false,
+                                    order: order,
                                   ),
                                 ],
                               ),
@@ -513,6 +528,7 @@ class StaffScreenState extends State<StaffScreen>
                                         orderId: order.id,
                                         itemId: item.item.id,
                                         isKitchen: false,
+                                        order: order,
                                       ),
                                     ],
                                   ),
@@ -525,6 +541,7 @@ class StaffScreenState extends State<StaffScreen>
                         order.status != OrderStatus.completed) ...[
                       const SizedBox(height: 16),
                       if (staffStatus == OrderStatus.pending)
+                        // Bulk operations only
                         Row(
                           children: [
                             Expanded(
@@ -541,14 +558,16 @@ class StaffScreenState extends State<StaffScreen>
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(8),
                                   ),
+                                  minimumSize: const Size(0, 36),
                                   padding: const EdgeInsets.symmetric(
-                                    vertical: 12,
+                                    vertical: 8,
+                                    horizontal: 12,
                                   ),
                                 ),
                                 child: const Text(
-                                  'Start Preparing',
+                                  'Batch: Start Preparing',
                                   style: TextStyle(
-                                    fontSize: 16,
+                                    fontSize: 14,
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
@@ -569,14 +588,16 @@ class StaffScreenState extends State<StaffScreen>
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(8),
                                   ),
+                                  minimumSize: const Size(0, 36),
                                   padding: const EdgeInsets.symmetric(
-                                    vertical: 12,
+                                    vertical: 8,
+                                    horizontal: 12,
                                   ),
                                 ),
                                 child: const Text(
-                                  'Ready',
+                                  'Batch: Mark Ready',
                                   style: TextStyle(
-                                    fontSize: 16,
+                                    fontSize: 14,
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
@@ -585,6 +606,7 @@ class StaffScreenState extends State<StaffScreen>
                           ],
                         )
                       else if (staffStatus == OrderStatus.preparing)
+                        // Bulk operation only
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
@@ -600,12 +622,16 @@ class StaffScreenState extends State<StaffScreen>
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              minimumSize: const Size(0, 36),
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 8,
+                                horizontal: 12,
+                              ),
                             ),
                             child: const Text(
-                              'Ready',
+                              'Batch: Mark Ready',
                               style: TextStyle(
-                                fontSize: 16,
+                                fontSize: 14,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),

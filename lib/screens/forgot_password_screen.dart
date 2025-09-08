@@ -6,7 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:fyp/state/auth_provider.dart' as auth;
 
 class ForgotPasswordScreen extends StatefulWidget {
-  const ForgotPasswordScreen({Key? key}) : super(key: key);
+  const ForgotPasswordScreen({super.key});
 
   @override
   State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();

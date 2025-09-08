@@ -7,7 +7,8 @@ class AdminNotificationsScreen extends StatefulWidget {
   const AdminNotificationsScreen({super.key});
 
   @override
-  State<AdminNotificationsScreen> createState() => _AdminNotificationsScreenState();
+  State<AdminNotificationsScreen> createState() =>
+      _AdminNotificationsScreenState();
 }
 
 class _AdminNotificationsScreenState extends State<AdminNotificationsScreen> {
@@ -27,18 +28,15 @@ class _AdminNotificationsScreenState extends State<AdminNotificationsScreen> {
     });
 
     try {
-      final snapshot = await _firestore
-          .collection('admin_notifications')
-          .orderBy('createdAt', descending: true)
-          .get();
+      final snapshot =
+          await _firestore
+              .collection('admin_notifications')
+              .orderBy('createdAt', descending: true)
+              .get();
 
       setState(() {
-        _notifications = snapshot.docs
-            .map((doc) => {
-                  'id': doc.id,
-                  ...doc.data(),
-                })
-            .toList();
+        _notifications =
+            snapshot.docs.map((doc) => {'id': doc.id, ...doc.data()}).toList();
         _isLoading = false;
       });
     } catch (e) {
@@ -64,7 +62,9 @@ class _AdminNotificationsScreenState extends State<AdminNotificationsScreen> {
           .update({'read': true});
 
       setState(() {
-        final index = _notifications.indexWhere((n) => n['id'] == notificationId);
+        final index = _notifications.indexWhere(
+          (n) => n['id'] == notificationId,
+        );
         if (index != -1) {
           _notifications[index]['read'] = true;
         }
@@ -83,7 +83,10 @@ class _AdminNotificationsScreenState extends State<AdminNotificationsScreen> {
 
   Future<void> _deleteNotification(String notificationId) async {
     try {
-      await _firestore.collection('admin_notifications').doc(notificationId).delete();
+      await _firestore
+          .collection('admin_notifications')
+          .doc(notificationId)
+          .delete();
 
       setState(() {
         _notifications.removeWhere((n) => n['id'] == notificationId);
@@ -111,12 +114,12 @@ class _AdminNotificationsScreenState extends State<AdminNotificationsScreen> {
 
   String _formatTimestamp(dynamic timestamp) {
     if (timestamp == null) return 'Unknown';
-    
+
     if (timestamp is Timestamp) {
       final date = timestamp.toDate();
       return DateFormat('dd MMM yyyy, HH:mm').format(date);
     }
-    
+
     return 'Unknown';
   }
 
@@ -156,10 +159,7 @@ class _AdminNotificationsScreenState extends State<AdminNotificationsScreen> {
                 ),
                 Text(
                   formattedTime,
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 12,
-                  ),
+                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
                 ),
               ],
             ),
@@ -218,9 +218,7 @@ class _AdminNotificationsScreenState extends State<AdminNotificationsScreen> {
         const SizedBox(height: 8),
         const Text(
           'User Details:',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 4),
         Text('User ID: $userId'),
@@ -230,7 +228,7 @@ class _AdminNotificationsScreenState extends State<AdminNotificationsScreen> {
             return Text('${entry.key}: ${entry.value}');
           }
           return const SizedBox.shrink();
-        }).toList(),
+        }),
       ],
     );
   }
@@ -238,10 +236,7 @@ class _AdminNotificationsScreenState extends State<AdminNotificationsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: FoodAppBar(
-        showSearch: false,
-        showCart: true,
-      ),
+      appBar: FoodAppBar(showSearch: false, showCart: true),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -253,10 +248,7 @@ class _AdminNotificationsScreenState extends State<AdminNotificationsScreen> {
               children: [
                 const Text(
                   'Admin Notifications',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 IconButton(
                   icon: const Icon(Icons.refresh),
@@ -266,19 +258,20 @@ class _AdminNotificationsScreenState extends State<AdminNotificationsScreen> {
               ],
             ),
           ),
-          
+
           // Notifications list
           Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _notifications.isEmpty
+            child:
+                _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _notifications.isEmpty
                     ? const Center(child: Text('No notifications'))
                     : ListView.builder(
-                        itemCount: _notifications.length,
-                        itemBuilder: (context, index) {
-                          return _buildNotificationCard(_notifications[index]);
-                        },
-                      ),
+                      itemCount: _notifications.length,
+                      itemBuilder: (context, index) {
+                        return _buildNotificationCard(_notifications[index]);
+                      },
+                    ),
           ),
         ],
       ),

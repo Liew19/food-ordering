@@ -7,7 +7,7 @@ import 'package:fyp/state/auth_provider.dart' as auth;
 import '../main.dart';
 
 class SignupScreen extends StatefulWidget {
-  const SignupScreen({Key? key}) : super(key: key);
+  const SignupScreen({super.key});
 
   @override
   State<SignupScreen> createState() => _SignupScreenState();

@@ -7,7 +7,7 @@ import '../services/menu_service.dart';
 import '../state/auth_provider.dart' as auth;
 
 class ImageUploadExampleScreen extends StatefulWidget {
-  const ImageUploadExampleScreen({Key? key}) : super(key: key);
+  const ImageUploadExampleScreen({super.key});
 
   @override
   State<ImageUploadExampleScreen> createState() =>
@@ -176,7 +176,7 @@ class _ImageUploadExampleScreenState extends State<ImageUploadExampleScreen> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Theme.of(context).primaryColor.withOpacity(0.1),
+              Theme.of(context).primaryColor.withValues(alpha: 0.1),
               Colors.white,
             ],
           ),

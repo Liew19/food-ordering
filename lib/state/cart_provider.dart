@@ -10,7 +10,7 @@ class CartItem {
 
   double get totalPrice => item.price * quantity;
 
-  get menuItem => null;
+  MenuItem get menuItem => item;
 }
 
 class CartProvider with ChangeNotifier {

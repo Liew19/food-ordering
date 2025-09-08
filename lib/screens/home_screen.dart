@@ -5,7 +5,7 @@ import '../services/api_service.dart';
 import '../widgets/special_menu_carousel.dart';
 import '../widgets/menu_item_detail_dialog.dart';
 import '../widgets/food_app_bar.dart';
-import '../widgets/menu_grid.dart';
+import '../widgets/optimized_menu_grid.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -23,6 +23,12 @@ class _HomeScreenState extends State<HomeScreen> {
   List<String> _categories = [];
   bool _isLoading = true;
   String? _error;
+
+  // Pagination variables
+  static const int _itemsPerPage = 20;
+  int _currentPage = 0;
+  bool _isLoadingMore = false;
+  bool _hasMoreItems = true;
 
   @override
   void initState() {
@@ -72,6 +78,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 item.category == selectedCategory;
             return matchesSearch && matchesCategory;
           }).toList();
+      _resetPagination();
     });
   }
 
@@ -81,6 +88,42 @@ class _HomeScreenState extends State<HomeScreen> {
       barrierColor: Colors.black.withAlpha(204),
       builder: (context) => MenuItemDetailDialog(item: item),
     );
+  }
+
+  // Get paginated items for display
+  List<MenuItem> get _paginatedItems {
+    final startIndex = _currentPage * _itemsPerPage;
+    final endIndex = (startIndex + _itemsPerPage).clamp(
+      0,
+      filteredItems.length,
+    );
+    return filteredItems.sublist(0, endIndex);
+  }
+
+  // Load more items for pagination
+  void _loadMoreItems() {
+    if (_isLoadingMore || !_hasMoreItems) return;
+
+    setState(() {
+      _isLoadingMore = true;
+    });
+
+    // Simulate loading delay
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (mounted) {
+        setState(() {
+          _currentPage++;
+          _isLoadingMore = false;
+          _hasMoreItems = _paginatedItems.length < filteredItems.length;
+        });
+      }
+    });
+  }
+
+  // Reset pagination when filters change
+  void _resetPagination() {
+    _currentPage = 0;
+    _hasMoreItems = true;
   }
 
   @override
@@ -194,12 +237,45 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
 
-                        // Menu Grid
-                        MenuGrid(
-                          filteredItems: filteredItems,
-                          onItemTap:
-                              (item) => showMenuItemDetails(context, item),
+                        // Menu Grid with pagination
+                        NotificationListener<ScrollNotification>(
+                          onNotification: (ScrollNotification scrollInfo) {
+                            if (scrollInfo.metrics.pixels ==
+                                    scrollInfo.metrics.maxScrollExtent &&
+                                _hasMoreItems &&
+                                !_isLoadingMore) {
+                              _loadMoreItems();
+                            }
+                            return false;
+                          },
+                          child: OptimizedMenuGrid(
+                            filteredItems: _paginatedItems,
+                            onItemTap:
+                                (item) => showMenuItemDetails(context, item),
+                          ),
                         ),
+
+                        // Load more indicator
+                        if (_isLoadingMore)
+                          const Padding(
+                            padding: EdgeInsets.all(16.0),
+                            child: Center(child: CircularProgressIndicator()),
+                          ),
+
+                        // End of list indicator
+                        if (!_hasMoreItems && filteredItems.isNotEmpty)
+                          const Padding(
+                            padding: EdgeInsets.all(16.0),
+                            child: Center(
+                              child: Text(
+                                'No more items to load',
+                                style: TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                          ),
                       ],
                     ),
                   ),

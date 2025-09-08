@@ -37,7 +37,11 @@ class CartScreen extends StatelessWidget {
             createdAt: DateTime.now(),
           );
 
-          Provider.of<OrderProvider>(context, listen: false).addOrder(order);
+          await Provider.of<OrderProvider>(
+            context,
+            listen: false,
+          ).addOrder(order);
+          if (!context.mounted) return;
           cartProvider.clearCart();
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(

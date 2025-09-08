@@ -2,6 +2,8 @@ import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../models/menu_item.dart';
 
+// ignore_for_file: constant_identifier_names, curly_braces_in_flow_control_structures
+
 class HiveService {
   static final HiveService _instance = HiveService._internal();
   Box<MenuItem>? _menuBox;

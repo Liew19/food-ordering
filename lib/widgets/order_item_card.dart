@@ -111,7 +111,7 @@ class OrderItemCard extends StatelessWidget {
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: statusColor.withOpacity(0.1),
+                              color: statusColor.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
@@ -153,69 +153,69 @@ class OrderItemCard extends StatelessWidget {
                       ],
                       const SizedBox(height: 16),
                       // Order items
-                      ...order.items
-                          .map(
-                            (item) => Padding(
-                              padding: const EdgeInsets.only(bottom: 8),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    width: 6,
-                                    height: 6,
-                                    decoration: BoxDecoration(
-                                      color: Colors.grey[400],
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          '${item.quantity} × ${item.item.name}',
-                                          style: const TextStyle(fontSize: 14),
-                                        ),
-                                        if (displayMode != DisplayMode.customer)
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 6,
-                                              vertical: 2,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color:
-                                                  _isStaffItem(item.item)
-                                                      ? Colors.blue.withOpacity(
-                                                        0.1,
-                                                      )
-                                                      : Colors.orange
-                                                          .withOpacity(0.1),
-                                              borderRadius:
-                                                  BorderRadius.circular(4),
-                                            ),
-                                            child: Text(
-                                              _isStaffItem(item.item)
-                                                  ? 'Staff'
-                                                  : 'Kitchen',
-                                              style: TextStyle(
-                                                color:
-                                                    _isStaffItem(item.item)
-                                                        ? Colors.blue
-                                                        : Colors.orange,
-                                                fontSize: 10,
-                                                fontWeight: FontWeight.w500,
-                                              ),
-                                            ),
-                                          ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
+                      ...order.items.map(
+                        (item) => Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 6,
+                                height: 6,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[400],
+                                  shape: BoxShape.circle,
+                                ),
                               ),
-                            ),
-                          )
-                          .toList(),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      '${item.quantity} × ${item.item.name}',
+                                      style: const TextStyle(fontSize: 14),
+                                    ),
+                                    if (displayMode != DisplayMode.customer)
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 6,
+                                          vertical: 2,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color:
+                                              _isStaffItem(item.item)
+                                                  ? Colors.blue.withValues(
+                                                    alpha: 0.1,
+                                                  )
+                                                  : Colors.orange.withValues(
+                                                    alpha: 0.1,
+                                                  ),
+                                          borderRadius: BorderRadius.circular(
+                                            4,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          _isStaffItem(item.item)
+                                              ? 'Staff'
+                                              : 'Kitchen',
+                                          style: TextStyle(
+                                            color:
+                                                _isStaffItem(item.item)
+                                                    ? Colors.blue
+                                                    : Colors.orange,
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                       if (displayMode == DisplayMode.customer) ...[
                         const SizedBox(height: 16),
                         Row(
@@ -269,11 +269,6 @@ class OrderItemCard extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  // Format date time
-  String _formatDateTime(DateTime dateTime) {
-    return '${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')} ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
   }
 
   // Determine if item is handled by staff (beverages and desserts)

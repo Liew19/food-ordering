@@ -61,44 +61,9 @@ class FoodAppBar extends StatelessWidget implements PreferredSizeWidget {
             padding: const EdgeInsets.only(right: 8.0),
             child: Consumer<CartProvider>(
               builder:
-                  (context, cart, child) => Stack(
-                    children: [
-                      IconButton(
-                        icon: const Icon(
-                          Icons.shopping_cart_outlined,
-                          color: Colors.black54,
-                        ),
-                        onPressed:
-                            onCartTap ??
-                            () {
-                              Navigator.pushNamed(context, '/cart');
-                            },
-                      ),
-                      if (cart.totalItems > 0)
-                        Positioned(
-                          right: 8,
-                          top: 8,
-                          child: Container(
-                            padding: const EdgeInsets.all(2),
-                            decoration: BoxDecoration(
-                              color: Colors.red,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            constraints: const BoxConstraints(
-                              minWidth: 16,
-                              minHeight: 16,
-                            ),
-                            child: Text(
-                              '${cart.totalItems}',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 10,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                        ),
-                    ],
+                  (context, cart, child) => _CartIcon(
+                    onCartTap: onCartTap,
+                    totalItems: cart.totalItems,
                   ),
             ),
           ),
@@ -108,4 +73,45 @@ class FoodAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+}
+
+class _CartIcon extends StatelessWidget {
+  final VoidCallback? onCartTap;
+  final int totalItems;
+
+  const _CartIcon({required this.onCartTap, required this.totalItems});
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        IconButton(
+          icon: const Icon(Icons.shopping_cart_outlined, color: Colors.black54),
+          onPressed:
+              onCartTap ??
+              () {
+                Navigator.pushNamed(context, '/cart');
+              },
+        ),
+        if (totalItems > 0)
+          Positioned(
+            right: 8,
+            top: 8,
+            child: Container(
+              padding: const EdgeInsets.all(2),
+              decoration: const BoxDecoration(
+                color: Colors.red,
+                borderRadius: BorderRadius.all(Radius.circular(10)),
+              ),
+              constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+              child: Text(
+                '$totalItems',
+                style: const TextStyle(color: Colors.white, fontSize: 10),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
 }

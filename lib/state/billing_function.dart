@@ -1,7 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:developer';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_stripe/flutter_stripe.dart' as stripe;
 import 'package:http/http.dart' as http;
@@ -78,7 +76,6 @@ class BillingFunctions {
 
       return children;
     } catch (e) {
-      log('Error getting parent children: $e');
       return [];
     }
   }
@@ -111,7 +108,6 @@ class BillingFunctions {
           .map((doc) => {'id': doc.id, ...(doc.data() as Map<String, dynamic>)})
           .toList();
     } catch (e) {
-      log('Error getting student bills: $e');
       return [];
     }
   }
@@ -159,7 +155,6 @@ class BillingFunctions {
 
       return allBills;
     } catch (e) {
-      log('Error getting parent bills: $e');
       return [];
     }
   }
@@ -192,7 +187,6 @@ class BillingFunctions {
 
       return childBills;
     } catch (e) {
-      log('Error getting child bills: $e');
       return [];
     }
   }
@@ -222,34 +216,17 @@ class BillingFunctions {
       request.bodyFields.addAll({"payment_method_types[]": "fpx"});
       request.bodyFields.addAll({"payment_method_types[]": "grabpay"});
 
-      if (kDebugMode) {
-        print("Creating payment intent with methods: card, fpx, grabpay");
-        print(
-          "Amount: $currency ${amount.toStringAsFixed(2)} (${amountInCents.toString()} cents)",
-        );
-      }
-
       var streamedResponse = await request.send();
       var responseFromStripeAPI = await http.Response.fromStream(
         streamedResponse,
       );
 
-      if (kDebugMode) {
-        print("Response status code: ${responseFromStripeAPI.statusCode}");
-        print("Response body: ${responseFromStripeAPI.body}");
-      }
-
       if (responseFromStripeAPI.statusCode == 200) {
         return jsonDecode(responseFromStripeAPI.body);
       } else {
-        log("Error creating payment intent: ${responseFromStripeAPI.body}");
         return null;
       }
     } catch (errorMsg) {
-      if (kDebugMode) {
-        print("Exception in makeIntentForPayment: $errorMsg");
-      }
-      log(errorMsg.toString());
       return null;
     }
   }
@@ -274,7 +251,6 @@ class BillingFunctions {
       }
       return 0;
     } catch (e) {
-      log("Error calculating days remaining: $e");
       return 0;
     }
   }

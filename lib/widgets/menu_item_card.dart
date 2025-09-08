@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../models/menu_item.dart';
 import '../state/cart_provider.dart';
 import '../theme.dart';
@@ -8,8 +9,7 @@ class MenuItemCard extends StatelessWidget {
   final MenuItem item;
   final VoidCallback onTap;
 
-  const MenuItemCard({Key? key, required this.item, required this.onTap})
-    : super(key: key);
+  const MenuItemCard({super.key, required this.item, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -94,37 +94,37 @@ class MenuItemCard extends StatelessWidget {
         quality: 85,
       );
 
-      return Image.network(
-        optimizedUrl,
+      return CachedNetworkImage(
+        imageUrl: optimizedUrl,
         height: isDesktop ? 140 : 100,
         width: double.infinity,
         fit: BoxFit.cover,
-        // Add loading placeholder
-        loadingBuilder: (context, child, loadingProgress) {
-          if (loadingProgress == null) return child;
-          return Container(
-            height: isDesktop ? 140 : 100,
-            width: double.infinity,
-            color: isDarkMode ? Colors.grey[800] : Colors.grey[300],
-            child: Center(
-              child: CircularProgressIndicator(
-                value:
-                    loadingProgress.expectedTotalBytes != null
-                        ? loadingProgress.cumulativeBytesLoaded /
-                            loadingProgress.expectedTotalBytes!
-                        : null,
-              ),
-            ),
-          );
-        },
-        errorBuilder: (context, error, stackTrace) {
-          return _buildErrorPlaceholder(context, isDesktop, isDarkMode);
-        },
+        placeholder:
+            (context, url) =>
+                _buildLoadingPlaceholder(context, isDesktop, isDarkMode),
+        errorWidget:
+            (context, url, error) =>
+                _buildErrorPlaceholder(context, isDesktop, isDarkMode),
+        memCacheWidth: isDesktop ? 280 : 200,
+        memCacheHeight: isDesktop ? 140 : 100,
       );
     }
 
     // Show placeholder if no Cloudinary image
     return _buildErrorPlaceholder(context, isDesktop, isDarkMode);
+  }
+
+  Widget _buildLoadingPlaceholder(
+    BuildContext context,
+    bool isDesktop,
+    bool isDarkMode,
+  ) {
+    return Container(
+      height: isDesktop ? 140 : 100,
+      width: double.infinity,
+      color: isDarkMode ? Colors.grey[800] : Colors.grey[300],
+      child: const Center(child: CircularProgressIndicator()),
+    );
   }
 
   // Extract error placeholder as a separate method
@@ -193,10 +193,10 @@ class MenuItemCard extends StatelessWidget {
         onPressed: () => _addToCart(context),
         // ElevatedButton theme customization
         style: AppTheme.primaryButtonStyle.copyWith(
-          shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+          shape: WidgetStateProperty.all<RoundedRectangleBorder>(
             RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           ),
-          foregroundColor: MaterialStateProperty.all<Color>(Colors.white),
+          foregroundColor: WidgetStateProperty.all<Color>(Colors.white),
         ),
         child: Transform.translate(
           offset: const Offset(0, -1), // Shift up by 1 pixel unit

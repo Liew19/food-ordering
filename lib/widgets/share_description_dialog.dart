@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class ShareDescriptionDialog extends StatefulWidget {
-  const ShareDescriptionDialog({Key? key}) : super(key: key);
+  const ShareDescriptionDialog({super.key});
 
   @override
   State<ShareDescriptionDialog> createState() => _ShareDescriptionDialogState();

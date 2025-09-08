@@ -7,6 +7,7 @@ import '../models/item_status.dart';
 import '../utils/fcfs.dart';
 import '../utils/sjf.dart';
 import '../utils/advanced_priority.dart';
+import '../services/order_service.dart';
 
 enum OrderSortAlgorithm { advancedPriority, fcfs, sjf }
 
@@ -18,10 +19,93 @@ class OrderProvider with ChangeNotifier {
   final Map<String, ItemStatus> _itemStatuses = {};
   OrderSortAlgorithm _currentAlgorithm = OrderSortAlgorithm.advancedPriority;
 
+  // Firestore service instance
+  final OrderService _orderService = OrderService();
+
   OrderSortAlgorithm get currentAlgorithm => _currentAlgorithm;
 
   void setAlgorithm(OrderSortAlgorithm algorithm) {
     _currentAlgorithm = algorithm;
+    notifyListeners();
+  }
+
+  // Initialize Firestore listeners
+  void initializeFirestoreListeners() {
+    // Listen to all active orders
+    _orderService.getActiveOrders().listen((orders) {
+      _updateOrdersFromFirestore(orders);
+    });
+
+    // Also listen to completed orders so history tab has data
+    _orderService.getCompletedOrders().listen((completed) {
+      _mergeCompletedOrders(completed);
+    });
+  }
+
+  // Update local orders from Firestore
+  void _updateOrdersFromFirestore(List<Order> firestoreOrders) {
+    _orders.clear();
+    _orders.addAll(firestoreOrders);
+
+    // Update local status maps
+    for (var order in firestoreOrders) {
+      _kitchenStatuses[order.id] = OrderStatus.pending;
+      _staffStatuses[order.id] = OrderStatus.pending;
+
+      // Initialize item statuses
+      for (var item in order.items) {
+        final itemKey = '${order.id}_${item.item.id}';
+        if (!_itemStatuses.containsKey(itemKey)) {
+          _itemStatuses[itemKey] = ItemStatus(
+            orderId: order.id,
+            itemId: item.item.id,
+            status: OrderStatus.pending,
+          );
+        }
+      }
+
+      // Hydrate item statuses from Firestore data if available on the Order model
+      if (order.itemStatuses.isNotEmpty) {
+        order.itemStatuses.forEach((itemId, status) {
+          final key = ItemStatus.createKey(order.id, itemId);
+          _itemStatuses[key] = ItemStatus(
+            orderId: order.id,
+            itemId: itemId,
+            status: status,
+          );
+        });
+      }
+    }
+
+    notifyListeners();
+  }
+
+  // Merge completed orders into local cache without dropping active ones
+  void _mergeCompletedOrders(List<Order> completedOrders) {
+    for (var order in completedOrders) {
+      final existingIndex = _orders.indexWhere((o) => o.id == order.id);
+      if (existingIndex >= 0) {
+        _orders[existingIndex] = order;
+      } else {
+        _orders.add(order);
+      }
+
+      // Ensure status maps and item statuses are initialized
+      _kitchenStatuses.putIfAbsent(order.id, () => OrderStatus.pending);
+      _staffStatuses.putIfAbsent(order.id, () => OrderStatus.pending);
+      for (var item in order.items) {
+        final itemKey = '${order.id}_${item.item.id}';
+        _itemStatuses.putIfAbsent(
+          itemKey,
+          () => ItemStatus(
+            orderId: order.id,
+            itemId: item.item.id,
+            status: OrderStatus.pending,
+          ),
+        );
+      }
+    }
+
     notifyListeners();
   }
 
@@ -166,15 +250,52 @@ class OrderProvider with ChangeNotifier {
     return filteredOrders;
   }
 
-  // Add new order
-  void addOrder(Order order) {
-    // Set hasReadyItems flag to false for new orders
-    order.hasReadyItems = false;
+  // Add new order and save to Firestore
+  Future<void> addOrder(Order order) async {
+    try {
+      // Save to Firestore first
+      final orderId = await _orderService.createOrder(order);
 
-    // Calculate priority for new order using advanced priority algorithm
-    order.priority = AdvancedOrderPrioritizer.calculatePriority(order);
-    _orders.add(order);
-    notifyListeners();
+      // Update the order with the Firestore document ID
+      final updatedOrder = Order(
+        id: orderId,
+        orderId: order.orderId,
+        userId: order.userId,
+        tableNumber: order.tableNumber,
+        items: order.items,
+        totalPrice: order.totalPrice,
+        status: order.status,
+        createdAt: order.createdAt,
+        completedAt: order.completedAt,
+      );
+
+      // Set hasReadyItems flag to false for new orders
+      updatedOrder.hasReadyItems = false;
+
+      // Calculate priority for new order using advanced priority algorithm
+      updatedOrder.priority = AdvancedOrderPrioritizer.calculatePriority(
+        updatedOrder,
+      );
+
+      // Initialize kitchen and staff statuses
+      _kitchenStatuses[updatedOrder.id] = OrderStatus.pending;
+      _staffStatuses[updatedOrder.id] = OrderStatus.pending;
+
+      // Initialize item statuses
+      for (var item in updatedOrder.items) {
+        final itemKey = '${updatedOrder.id}_${item.item.id}';
+        _itemStatuses[itemKey] = ItemStatus(
+          orderId: updatedOrder.id,
+          itemId: item.item.id,
+          status: OrderStatus.pending,
+        );
+      }
+
+      _orders.add(updatedOrder);
+      notifyListeners();
+    } catch (e) {
+      throw Exception('Failed to add order: $e');
+    }
   }
 
   // Update order status - supports both String and OrderStatus types
@@ -254,49 +375,60 @@ class OrderProvider with ChangeNotifier {
   }
 
   // Update status of an individual item
-  void updateItemStatus(String orderId, String itemId, OrderStatus status) {
-    final key = ItemStatus.createKey(orderId, itemId);
+  Future<void> updateItemStatus(
+    String orderId,
+    String itemId,
+    OrderStatus status,
+  ) async {
+    try {
+      // Update Firestore first
+      await _orderService.updateItemStatus(orderId, itemId, status);
 
-    if (_itemStatuses.containsKey(key)) {
-      _itemStatuses[key]!.status = status;
-    } else {
-      _itemStatuses[key] = ItemStatus(
-        orderId: orderId,
-        itemId: itemId,
-        status: status,
-      );
-    }
+      // Update local state
+      final key = ItemStatus.createKey(orderId, itemId);
 
-    // Update the hasReadyItems flag for the order
-    final orderIndex = _orders.indexWhere((o) => o.id == orderId);
-    if (orderIndex != -1) {
-      // If this item is now ready, set the flag
-      if (status == OrderStatus.ready) {
-        _orders[orderIndex].hasReadyItems = true;
+      if (_itemStatuses.containsKey(key)) {
+        _itemStatuses[key]!.status = status;
       } else {
-        // Otherwise, check if any other items are ready
-        _orders[orderIndex].hasReadyItems = false;
-        for (var item in _orders[orderIndex].items) {
-          final itemStatus = getItemStatus(orderId, item.item.id);
-          if (itemStatus == OrderStatus.ready) {
-            _orders[orderIndex].hasReadyItems = true;
-            break;
-          }
-        }
+        _itemStatuses[key] = ItemStatus(
+          orderId: orderId,
+          itemId: itemId,
+          status: status,
+        );
       }
 
-      // Update the order's priority
-      _orders[orderIndex].priority = AdvancedOrderPrioritizer.calculatePriority(
-        _orders[orderIndex],
-      );
-    }
+      // Update the hasReadyItems flag for the order
+      final orderIndex = _orders.indexWhere((o) => o.id == orderId);
+      if (orderIndex != -1) {
+        // If this item is now ready, set the flag
+        if (status == OrderStatus.ready) {
+          _orders[orderIndex].hasReadyItems = true;
+        } else {
+          // Otherwise, check if any other items are ready
+          _orders[orderIndex].hasReadyItems = false;
+          for (var item in _orders[orderIndex].items) {
+            final itemStatus = getItemStatus(orderId, item.item.id);
+            if (itemStatus == OrderStatus.ready) {
+              _orders[orderIndex].hasReadyItems = true;
+              break;
+            }
+          }
+        }
 
-    // Check if all items in the order are ready, and if so, mark the order as completed
-    if (status == OrderStatus.ready) {
-      checkAndUpdateOrderStatus(orderId);
-    }
+        // Update the order's priority
+        _orders[orderIndex].priority =
+            AdvancedOrderPrioritizer.calculatePriority(_orders[orderIndex]);
+      }
 
-    notifyListeners();
+      // Check if all items in the order are ready, and if so, mark the order as completed
+      if (status == OrderStatus.ready) {
+        checkAndUpdateOrderStatus(orderId);
+      }
+
+      notifyListeners();
+    } catch (e) {
+      throw Exception('Failed to update item status: $e');
+    }
   }
 
   // Check if all items in an order are ready and update order status accordingly
@@ -316,17 +448,25 @@ class OrderProvider with ChangeNotifier {
       }
     }
 
-    // If all items are ready, mark the order as completed
+    // If all items are ready, finalize status
     if (allItemsReady) {
-      // Update the main order status
-      _orders[orderIndex].status = OrderStatus.ready;
+      // Decide if overall order should be completed
+      _orderService.shouldCompleteOrder(orderId).then((shouldComplete) async {
+        if (shouldComplete) {
+          // Persist completion to Firestore
+          await _orderService.updateOrderStatus(orderId, OrderStatus.completed);
+          _orders[orderIndex].status = OrderStatus.completed;
+          _orders[orderIndex].completedAt = DateTime.now();
+        } else {
+          // Mark as ready (parts done but not fully completed)
+          _orders[orderIndex].status = OrderStatus.ready;
+          _kitchenStatuses[orderId] = OrderStatus.ready;
+          _staffStatuses[orderId] = OrderStatus.ready;
+        }
 
-      // Also update kitchen and staff statuses
-      _kitchenStatuses[orderId] = OrderStatus.ready;
-      _staffStatuses[orderId] = OrderStatus.ready;
-
-      // Notify listeners to update the UI
-      notifyListeners();
+        // Notify listeners to update the UI
+        notifyListeners();
+      });
     }
   }
 
@@ -349,90 +489,133 @@ class OrderProvider with ChangeNotifier {
     }
   }
 
-  void updateKitchenStatus(String orderId, OrderStatus status) {
-    // Update the kitchen status for the order
-    _kitchenStatuses[orderId] = status;
-
-    // Get the order
-    final orderIndex = _orders.indexWhere((o) => o.id == orderId);
-    if (orderIndex != -1) {
-      final order = _orders[orderIndex];
-
-      // Update all kitchen items to the same status
-      for (var item in order.items) {
-        if (!_isStaffItem(item.item)) {
-          updateItemStatus(orderId, item.item.id, status);
-        }
+  Future<void> updateKitchenStatus(String orderId, OrderStatus status) async {
+    try {
+      // Ensure the order exists locally and in Firestore before updating
+      final existsLocally = _orders.any((o) => o.id == orderId);
+      if (!existsLocally) {
+        // Avoid throwing when tapping actions on orders not yet synced
+        return;
       }
 
-      // If status is ready, check if all kitchen items are ready
-      if (status == OrderStatus.ready) {
-        // Check if all kitchen items are ready
-        bool allKitchenItemsReady = true;
+      // Update Firestore first
+      await _orderService.updateKitchenStatus(orderId, status);
+
+      // Update local state
+      _kitchenStatuses[orderId] = status;
+
+      // Get the order
+      final orderIndex = _orders.indexWhere((o) => o.id == orderId);
+      if (orderIndex != -1) {
+        final order = _orders[orderIndex];
+
+        // Update all kitchen items to the same status
         for (var item in order.items) {
           if (!_isStaffItem(item.item)) {
-            // Only check kitchen items
-            final itemStatus = getItemStatus(orderId, item.item.id);
-            if (itemStatus != OrderStatus.ready) {
-              allKitchenItemsReady = false;
-              break;
-            }
+            await updateItemStatus(orderId, item.item.id, status);
           }
         }
 
-        // If all kitchen items are ready, mark kitchen part as ready
-        if (allKitchenItemsReady) {
-          // We don't need to update the main order status
-          // Just keep the kitchen status as ready
-          _kitchenStatuses[orderId] = OrderStatus.ready;
+        // If status is ready, check if all kitchen items are ready
+        if (status == OrderStatus.ready) {
+          // Check if all kitchen items are ready
+          bool allKitchenItemsReady = true;
+          for (var item in order.items) {
+            if (!_isStaffItem(item.item)) {
+              // Only check kitchen items
+              final itemStatus = getItemStatus(orderId, item.item.id);
+              if (itemStatus != OrderStatus.ready) {
+                allKitchenItemsReady = false;
+                break;
+              }
+            }
+          }
+
+          // If all kitchen items are ready, mark kitchen part as ready
+          if (allKitchenItemsReady) {
+            // We don't need to update the main order status
+            // Just keep the kitchen status as ready
+            _kitchenStatuses[orderId] = OrderStatus.ready;
+          }
         }
       }
-    }
 
-    notifyListeners();
+      notifyListeners();
+    } catch (e) {
+      throw Exception('Failed to update kitchen status: $e');
+    }
   }
 
-  void updateStaffStatus(String orderId, OrderStatus status) {
-    // Update the staff status for the order
-    _staffStatuses[orderId] = status;
-
-    // Get the order
-    final orderIndex = _orders.indexWhere((o) => o.id == orderId);
-    if (orderIndex != -1) {
-      final order = _orders[orderIndex];
-
-      // Update all staff items to the same status
-      for (var item in order.items) {
-        if (_isStaffItem(item.item)) {
-          updateItemStatus(orderId, item.item.id, status);
-        }
+  Future<void> updateStaffStatus(String orderId, OrderStatus status) async {
+    try {
+      // Ensure the order exists locally and in Firestore before updating
+      final existsLocally = _orders.any((o) => o.id == orderId);
+      if (!existsLocally) {
+        return;
       }
 
-      // If status is ready, check if all staff items are ready
-      if (status == OrderStatus.ready) {
-        // Check if all staff items are ready
-        bool allStaffItemsReady = true;
+      // Update Firestore first
+      await _orderService.updateStaffStatus(orderId, status);
+
+      // Update local state
+      _staffStatuses[orderId] = status;
+
+      // Get the order
+      final orderIndex = _orders.indexWhere((o) => o.id == orderId);
+      if (orderIndex != -1) {
+        final order = _orders[orderIndex];
+
+        // Update all staff items to the same status
         for (var item in order.items) {
           if (_isStaffItem(item.item)) {
-            // Only check staff items
-            final itemStatus = getItemStatus(orderId, item.item.id);
-            if (itemStatus != OrderStatus.ready) {
-              allStaffItemsReady = false;
-              break;
-            }
+            await updateItemStatus(orderId, item.item.id, status);
           }
         }
 
-        // If all staff items are ready, mark staff part as ready
-        if (allStaffItemsReady) {
-          // We don't need to update the main order status
-          // Just keep the staff status as ready
-          _staffStatuses[orderId] = OrderStatus.ready;
+        // If status is ready, check if all staff items are ready
+        if (status == OrderStatus.ready) {
+          // Check if all staff items are ready
+          bool allStaffItemsReady = true;
+          for (var item in order.items) {
+            if (_isStaffItem(item.item)) {
+              // Only check staff items
+              final itemStatus = getItemStatus(orderId, item.item.id);
+              if (itemStatus != OrderStatus.ready) {
+                allStaffItemsReady = false;
+                break;
+              }
+            }
+          }
+
+          // If all staff items are ready, mark staff part as ready
+          if (allStaffItemsReady) {
+            _staffStatuses[orderId] = OrderStatus.ready;
+
+            // Also check whether the entire order can now be completed
+            _orderService.shouldCompleteOrder(orderId).then((
+              shouldComplete,
+            ) async {
+              if (shouldComplete) {
+                await _orderService.updateOrderStatus(
+                  orderId,
+                  OrderStatus.completed,
+                );
+                _orders[orderIndex].status = OrderStatus.completed;
+                _orders[orderIndex].completedAt = DateTime.now();
+              } else {
+                // At least staff portion is ready
+                _orders[orderIndex].status = OrderStatus.ready;
+              }
+              notifyListeners();
+            });
+          }
         }
       }
-    }
 
-    notifyListeners();
+      notifyListeners();
+    } catch (e) {
+      throw Exception('Failed to update staff status: $e');
+    }
   }
 
   List<Order> getKitchenOrders({bool includeCompleted = true}) {
@@ -669,7 +852,7 @@ class OrderProvider with ChangeNotifier {
                   order.status != OrderStatus.completed &&
                   order.status != OrderStatus.cancelled &&
                   order.items.any((item) => _isStaffItem(item.item)) &&
-                  !areStaffItemsReady(order.id),
+                  _hasUnreadyStaffItems(order.id),
             )
             .toList();
 
@@ -760,9 +943,11 @@ class OrderProvider with ChangeNotifier {
       final order = _orders.firstWhere((o) => o.id == orderId);
 
       // Check if all staff items in the order are ready
+      bool hasStaffItems = false;
       for (var item in order.items) {
         if (_isStaffItem(item.item)) {
           // Only check staff items
+          hasStaffItems = true;
           final itemStatus = getItemStatus(orderId, item.item.id);
           if (itemStatus != OrderStatus.ready) {
             return false;
@@ -770,9 +955,39 @@ class OrderProvider with ChangeNotifier {
         }
       }
 
+      if (!hasStaffItems)
+        return false; // treat no staff items as not-ready here
       return true; // All staff items are ready
     } catch (e) {
       // Order not found
+      return false;
+    }
+  }
+
+  // Helper: does this order have at least one staff item not ready?
+  bool _hasUnreadyStaffItems(String orderId) {
+    try {
+      final order = _orders.firstWhere((o) => o.id == orderId);
+      // Prefer checking Order.itemStatuses if available (fresh from Firestore)
+      if (order.itemStatuses.isNotEmpty) {
+        for (var item in order.items) {
+          if (_isStaffItem(item.item)) {
+            final s = order.itemStatuses[item.item.id] ?? OrderStatus.pending;
+            if (s != OrderStatus.ready) return true;
+          }
+        }
+        return false;
+      }
+
+      // Fallback to provider cache
+      for (var item in order.items) {
+        if (_isStaffItem(item.item)) {
+          final status = getItemStatus(orderId, item.item.id);
+          if (status != OrderStatus.ready) return true;
+        }
+      }
+      return false;
+    } catch (e) {
       return false;
     }
   }
@@ -1052,9 +1267,9 @@ class OrderProvider with ChangeNotifier {
   }
 
   // Mark a kitchen batch as ready - updates individual item status
-  void completeKitchenBatch(BatchGroup batchGroup) {
+  void completeKitchenBatch(BatchGroup batchGroup) async {
     // Get affected items
-    final affectedItems = BatchProcessor.processItemBatch(
+    final affectedItems = await BatchProcessor.processItemBatch(
       batchGroup,
       updateItemStatus,
       OrderStatus.ready,
@@ -1068,9 +1283,24 @@ class OrderProvider with ChangeNotifier {
         processedOrderIds.add(orderId);
 
         // Check if all kitchen items in this order are ready
-        if (areKitchenItemsReady(orderId)) {
-          // Mark kitchen part as ready
-          _kitchenStatuses[orderId] = OrderStatus.ready;
+        final areReady = await _orderService.areAllKitchenItemsReady(orderId);
+
+        if (areReady) {
+          // Mark kitchen part as ready in local state and Firestore
+          updateKitchenStatus(orderId, OrderStatus.ready).then((_) async {
+            // Now check if the entire order should be completed
+            final shouldComplete = await _orderService.shouldCompleteOrder(
+              orderId,
+            );
+
+            if (shouldComplete) {
+              // Mark the entire order as completed
+              await _orderService.updateOrderStatus(
+                orderId,
+                OrderStatus.completed,
+              );
+            }
+          });
         }
       }
     }
@@ -1079,9 +1309,9 @@ class OrderProvider with ChangeNotifier {
   }
 
   // Mark a staff batch as ready - updates individual item status
-  void completeStaffBatch(BatchGroup batchGroup) {
+  void completeStaffBatch(BatchGroup batchGroup) async {
     // Get affected items
-    final affectedItems = BatchProcessor.processItemBatch(
+    final affectedItems = await BatchProcessor.processItemBatch(
       batchGroup,
       updateItemStatus,
       OrderStatus.ready,
@@ -1095,9 +1325,24 @@ class OrderProvider with ChangeNotifier {
         processedOrderIds.add(orderId);
 
         // Check if all staff items in this order are ready
-        if (areStaffItemsReady(orderId)) {
-          // Mark staff part as ready
-          _staffStatuses[orderId] = OrderStatus.ready;
+        final areReady = await _orderService.areAllStaffItemsReady(orderId);
+
+        if (areReady) {
+          // Mark staff part as ready in local state and Firestore
+          updateStaffStatus(orderId, OrderStatus.ready).then((_) async {
+            // Now check if the entire order should be completed
+            final shouldComplete = await _orderService.shouldCompleteOrder(
+              orderId,
+            );
+
+            if (shouldComplete) {
+              // Mark the entire order as completed
+              await _orderService.updateOrderStatus(
+                orderId,
+                OrderStatus.completed,
+              );
+            }
+          });
         }
       }
     }
