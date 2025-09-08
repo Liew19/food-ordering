@@ -412,12 +412,12 @@ class BatchProcessor {
   /// Process a batch of items, updating only the individual items' status
   ///
   /// Returns a list of item keys that were affected by this batch processing
-  static List<Map<String, String>> processItemBatch(
+  static Future<List<Map<String, String>>> processItemBatch(
     BatchGroup group,
     Function(String orderId, String itemId, OrderStatus status)
     updateItemStatus,
     OrderStatus newStatus,
-  ) {
+  ) async {
     final List<Map<String, String>> affectedItems = [];
 
     // Track which items we've already processed to avoid duplicates
@@ -438,7 +438,9 @@ class BatchProcessor {
       processedItems.add(itemKey);
 
       // Update the item status
-      updateItemStatus(orderId, itemId, newStatus);
+      try {
+        await updateItemStatus(orderId, itemId, newStatus);
+      } catch (e) {}
 
       // Add to affected items
       affectedItems.add({'orderId': orderId, 'itemId': itemId});
@@ -483,16 +485,21 @@ class AdvancedOrderPrioritizer {
   // Calculate overall priority score for an order
   // Combines preparation time and wait time with dynamic weighting
   static double calculatePriority(Order order) {
-    // Calculate component scores
-    final preparationScore = _calculatePreparationScore(order);
-
     // Calculate how long the order has been waiting
     final waitTimeMinutes =
         DateTime.now().difference(order.createdAt).inMinutes;
 
-    // Base priority starts low and increases with wait time
-    // Start with preparation time as the base (0.0-0.3 range)
-    double priority = preparationScore * 0.3;
+    // For brand new orders (less than 1 minute), give very low priority
+    if (waitTimeMinutes < 1) {
+      return 0.05; // Very low priority for brand new orders
+    }
+
+    // Calculate component scores
+    final preparationScore = _calculatePreparationScore(order);
+
+    // Base priority starts very low and increases with wait time
+    // Start with a much smaller preparation time component
+    double priority = preparationScore * 0.1; // Reduced from 0.3 to 0.1
 
     // Add wait time component with very gradual scaling
     // For orders under 10 minutes, priority increases very slowly
@@ -509,12 +516,9 @@ class AdvancedOrderPrioritizer {
       final waitFactor = (waitTimeMinutes - 3) / 2.0;
       priority = 0.4 + (waitFactor * 0.2);
     } else if (waitTimeMinutes >= 1) {
-      // Orders waiting 1-3 minutes get low-medium priority (0.2-0.4)
+      // Orders waiting 1-3 minutes get low-medium priority (0.1-0.4)
       final waitFactor = (waitTimeMinutes - 1) / 2.0;
-      priority = 0.2 + (waitFactor * 0.2);
-    } else {
-      // Orders waiting less than 1 minute get very low priority (0.05-0.2)
-      priority = 0.05 + (waitTimeMinutes * 0.15);
+      priority = 0.1 + (waitFactor * 0.3); // Reduced base from 0.2 to 0.1
     }
 
     // Check if the order has any ready items (this will be set by OrderProvider)

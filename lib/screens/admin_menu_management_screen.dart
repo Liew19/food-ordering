@@ -362,8 +362,8 @@ class _AdminMenuManagementScreenState extends State<AdminMenuManagementScreen>
                     )
                     : const Icon(Icons.refresh, color: Colors.white),
             tooltip: 'Refresh menu items',
-            splashColor: Colors.white.withOpacity(0.3),
-            highlightColor: Colors.white.withOpacity(0.2),
+            splashColor: Colors.white.withValues(alpha: 0.3),
+            highlightColor: Colors.white.withValues(alpha: 0.2),
           ),
         ],
       ),
@@ -432,7 +432,7 @@ class _AdminMenuManagementScreenState extends State<AdminMenuManagementScreen>
                               },
                               selectedColor: const Color(
                                 0xFFE53935,
-                              ).withOpacity(0.2),
+                              ).withValues(alpha: 0.2),
                               checkmarkColor: const Color(0xFFE53935),
                             ),
                           );

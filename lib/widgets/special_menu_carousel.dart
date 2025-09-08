@@ -106,7 +106,7 @@ class _SpecialMenuCarouselState extends State<SpecialMenuCarousel>
             borderRadius: BorderRadius.circular(20), // Reduced border radius
             boxShadow: [
               BoxShadow(
-                color: AppTheme.shadowColor.withOpacity(0.2),
+                color: AppTheme.shadowColor.withValues(alpha: 0.2),
                 blurRadius: 15,
                 offset: const Offset(0, 8),
               ),
@@ -190,7 +190,7 @@ class _SpecialMenuCarouselState extends State<SpecialMenuCarousel>
                       end: Alignment.bottomCenter,
                       colors: [
                         Colors.transparent,
-                        Colors.black.withOpacity(0.8),
+                        Colors.black.withValues(alpha: 0.8),
                       ],
                       stops: const [0.5, 1.0],
                     ),
@@ -212,7 +212,7 @@ class _SpecialMenuCarouselState extends State<SpecialMenuCarousel>
                       borderRadius: BorderRadius.circular(25),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
+                          color: Colors.black.withValues(alpha: 0.2),
                           blurRadius: 8,
                           offset: const Offset(0, 2),
                         ),
@@ -261,14 +261,14 @@ class _SpecialMenuCarouselState extends State<SpecialMenuCarousel>
                       Text(
                         'RM ${menu.price.toStringAsFixed(2)}',
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.9),
+                          color: Colors.white.withValues(alpha: 0.9),
                           fontSize: 18,
                           fontWeight: FontWeight.w500,
                           shadows: [
                             Shadow(
                               offset: const Offset(0, 1),
                               blurRadius: 2.0,
-                              color: Colors.black.withOpacity(0.5),
+                              color: Colors.black.withValues(alpha: 0.5),
                             ),
                           ],
                         ),
@@ -374,7 +374,7 @@ class _SpecialMenuCarouselState extends State<SpecialMenuCarousel>
                   dotHeight: 8,
                   dotWidth: 8,
                   activeDotColor: const Color(0xFFE53935),
-                  dotColor: Colors.grey.withOpacity(0.5),
+                  dotColor: Colors.grey.withValues(alpha: 0.5),
                 ),
               ),
             ],

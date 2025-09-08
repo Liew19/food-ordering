@@ -1,6 +1,5 @@
-/// SeatProgressBar
-/// Displays the current seat occupancy as a progress bar
-/// Shows the format "2/4 seats"
+// SeatProgressBar - Displays the current seat occupancy as a progress bar
+// Shows the format "2/4 seats"
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -10,10 +9,10 @@ class SeatProgressBar extends StatelessWidget {
   final int capacity;
 
   const SeatProgressBar({
-    Key? key,
+    super.key,
     required this.occupiedSeats,
     required this.capacity,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

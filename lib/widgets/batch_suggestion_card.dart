@@ -11,15 +11,15 @@ class BatchSuggestionCard extends StatelessWidget {
   final int index;
 
   const BatchSuggestionCard({
-    Key? key,
+    super.key,
     required this.batchGroup,
     required this.isKitchen,
     required this.allGroups,
     required this.index,
-  }) : super(key: key);
+  });
 
-  // Get color based on priority value
-  Color _getPriorityColor(double priority) {
+  // Get color based on priority value - made static for better performance
+  static Color _getPriorityColor(double priority) {
     if (priority >= 0.8) {
       return Colors.red; // High priority
     } else if (priority >= 0.5) {
@@ -28,19 +28,6 @@ class BatchSuggestionCard extends StatelessWidget {
       return Colors.amber; // Low-medium priority
     } else {
       return Colors.green; // Low priority
-    }
-  }
-
-  // Get priority text based on priority value
-  String _getPriorityText(double priority) {
-    if (priority >= 0.8) {
-      return 'High'; // High priority
-    } else if (priority >= 0.5) {
-      return 'Medium'; // Medium priority
-    } else if (priority >= 0.3) {
-      return 'Low-Medium'; // Low-medium priority
-    } else {
-      return 'Low'; // Low priority
     }
   }
 

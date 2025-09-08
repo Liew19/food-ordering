@@ -9,7 +9,7 @@ import '../state/auth_provider.dart' as auth;
 class CreateMenuItemScreen extends StatefulWidget {
   final MenuItem? existingItem; // For editing existing items
 
-  const CreateMenuItemScreen({Key? key, this.existingItem}) : super(key: key);
+  const CreateMenuItemScreen({super.key, this.existingItem});
 
   @override
   State<CreateMenuItemScreen> createState() => _CreateMenuItemScreenState();
@@ -224,7 +224,7 @@ class _CreateMenuItemScreenState extends State<CreateMenuItemScreen> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Theme.of(context).primaryColor.withOpacity(0.1),
+              Theme.of(context).primaryColor.withValues(alpha: 0.1),
               Colors.white,
             ],
           ),

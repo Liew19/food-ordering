@@ -6,8 +6,11 @@ class OrdersList extends StatelessWidget {
   final List<Order> orders;
   final DisplayMode displayMode;
 
-  const OrdersList({Key? key, required this.orders, required this.displayMode})
-    : super(key: key);
+  const OrdersList({
+    super.key,
+    required this.orders,
+    required this.displayMode,
+  });
 
   @override
   Widget build(BuildContext context) {

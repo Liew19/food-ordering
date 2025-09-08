@@ -36,7 +36,6 @@ class _TableReservationScreenState extends State<TableReservationScreen> {
   String? _tableError;
 
   Set<int> _reservedTableIds = {};
-  bool _isLoadingAvailability = false;
 
   bool _hasLoadedReservations = false;
 
@@ -353,9 +352,7 @@ class _TableReservationScreenState extends State<TableReservationScreen> {
       });
       return;
     }
-    setState(() {
-      _isLoadingAvailability = true;
-    });
+    // Loading state removed - no longer needed
     try {
       final reservationProvider = Provider.of<ReservationProvider>(
         context,
@@ -376,12 +373,10 @@ class _TableReservationScreenState extends State<TableReservationScreen> {
               .toSet();
       setState(() {
         _reservedTableIds = reserved;
-        _isLoadingAvailability = false;
       });
     } catch (e) {
       setState(() {
         _reservedTableIds = {};
-        _isLoadingAvailability = false;
       });
     }
   }
@@ -624,7 +619,7 @@ class _TableReservationScreenState extends State<TableReservationScreen> {
               ),
 
             // Existing reservations section
-            if (user != null) ...[
+            ...[
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
@@ -925,7 +920,7 @@ class _TableReservationScreenState extends State<TableReservationScreen> {
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: user == null ? null : _confirmReservation,
+                        onPressed: _confirmReservation,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Theme.of(context).primaryColor,
                           foregroundColor: Colors.white,
@@ -935,27 +930,15 @@ class _TableReservationScreenState extends State<TableReservationScreen> {
                           ),
                           disabledBackgroundColor: Colors.grey,
                         ),
-                        child: Text(
-                          user == null
-                              ? 'Login to Make Reservation'
-                              : 'Confirm Reservation',
-                          style: const TextStyle(
+                        child: const Text(
+                          'Confirm Reservation',
+                          style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
                           ),
                         ),
                       ),
                     ),
-
-                    if (user == null) ...[
-                      const SizedBox(height: 16),
-                      const Center(
-                        child: Text(
-                          'You need to be logged in to make a reservation',
-                          style: TextStyle(color: Colors.red),
-                        ),
-                      ),
-                    ],
                   ],
                 ),
               ),

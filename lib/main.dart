@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:fyp/screens/cart_screen.dart';
 import 'package:fyp/screens/home_screen.dart';
-import 'package:fyp/screens/kitchen_screen.dart';
 import 'package:fyp/screens/login_screen.dart';
 import 'package:fyp/screens/order_status_screen.dart';
 import 'package:fyp/screens/profile_screen.dart';
 import 'package:fyp/screens/staff_screen.dart';
+import 'package:fyp/screens/kitchen_screen_firestore.dart';
 import 'package:fyp/screens/table_reservation_screen.dart';
 import 'package:fyp/screens/image_upload_example_screen.dart';
 
@@ -34,19 +34,11 @@ void main() async {
   // Load environment variables
   try {
     await dotenv.load(fileName: "env.txt");
-    debugPrint('✅ Environment variables loaded successfully');
-    debugPrint(
-      '   CLOUDINARY_CLOUD_NAME: ${dotenv.env['CLOUDINARY_CLOUD_NAME']}',
-    );
-    debugPrint(
-      '   CLOUDINARY_UPLOAD_PRESET: ${dotenv.env['CLOUDINARY_UPLOAD_PRESET']}',
-    );
 
     // Configure Stripe publishable key and apply settings
     stripe.Stripe.publishableKey = dotenv.env['STRIPE_PUBLISHABLE_KEY'] ?? '';
     await stripe.Stripe.instance.applySettings();
   } catch (e) {
-    debugPrint('❌ Initialization error (dotenv/Stripe): $e');
     // Initialize dotenv with empty map if loading fails
     dotenv.testLoad(fileInput: '');
   }
@@ -58,7 +50,6 @@ void main() async {
   try {
     await MigrationService.migrateMenuItemsForSoftDelete();
   } catch (e) {
-    debugPrint('⚠️ Migration warning: $e');
     // Don't block app startup if migration fails
   }
 
@@ -90,7 +81,7 @@ void main() async {
 class MyApp extends StatelessWidget {
   final ApiService apiService;
 
-  const MyApp({required this.apiService, Key? key}) : super(key: key);
+  const MyApp({required this.apiService, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -98,7 +89,13 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => auth.AppAuthProvider()),
         ChangeNotifierProvider(create: (_) => CartProvider()),
-        ChangeNotifierProvider(create: (_) => OrderProvider()),
+        ChangeNotifierProvider(
+          create: (_) {
+            final orderProvider = OrderProvider();
+            orderProvider.initializeFirestoreListeners();
+            return orderProvider;
+          },
+        ),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(
           create: (_) => ReservationProvider(ReservationService()),
@@ -175,8 +172,9 @@ class MainScreenState extends State<MainScreen> {
     HomeScreen(),
     CartScreen(),
     OrderStatusScreen(),
-    KitchenScreen(),
-    StaffScreen(),
+    // Use Firestore-based kitchen screen
+    KitchenScreenFirestore(),
+    StaffScreen(), // Using updated StaffScreen with Firestore integration
     ProfileScreen(),
     TableReservationScreen(),
   ];

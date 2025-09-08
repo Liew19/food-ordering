@@ -5,11 +5,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 enum Gender { male, female, other }
 
 class EditProfileScreen extends StatefulWidget {
+  const EditProfileScreen({super.key});
+
   @override
-  _EditProfileScreenState createState() => _EditProfileScreenState();
+  EditProfileScreenState createState() => EditProfileScreenState();
 }
 
-class _EditProfileScreenState extends State<EditProfileScreen> {
+class EditProfileScreenState extends State<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _nameController = TextEditingController();
   Gender? _selectedGender;
@@ -40,7 +42,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         }
       } catch (e) {
         // Handle error silently or show a message
-        print('Error loading user data: $e');
       }
     }
   }

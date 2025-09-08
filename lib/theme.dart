@@ -16,8 +16,8 @@ class AppTheme {
   static const Color textMutedColor = Color(0xFFEF9A9A); // Light red text
 
   // Shadow colors
-  static final Color shadowColor = primaryColor.withOpacity(0.4);
-  static final Color darkShadowColor = Colors.black.withOpacity(0.1);
+  static final Color shadowColor = primaryColor.withValues(alpha: 0.4);
+  static final Color darkShadowColor = Colors.black.withValues(alpha: 0.1);
 
   // Card colors
   static final Color cardColor = Colors.white;
@@ -114,7 +114,7 @@ class AppTheme {
       // Ensure AlertDialog uses correct colors
       dialogBackgroundColor: Color(0xFF333333),
       checkboxTheme: CheckboxThemeData(
-        fillColor: MaterialStateProperty.all(primaryColor),
+        fillColor: WidgetStateProperty.all(primaryColor),
       ),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: backgroundColor,

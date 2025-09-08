@@ -20,6 +20,13 @@ class Order {
   // This will be set by OrderProvider when calculating priorities
   bool hasReadyItems = false;
 
+  // Map of item IDs to their individual statuses
+  Map<String, OrderStatus> itemStatuses = {};
+
+  // Kitchen and staff status tracking
+  OrderStatus? kitchenStatus;
+  OrderStatus? staffStatus;
+
   Order({
     required this.id,
     this.orderId,
@@ -30,6 +37,8 @@ class Order {
     required this.status,
     required this.createdAt,
     this.completedAt,
+    this.kitchenStatus,
+    this.staffStatus,
   });
   // Calculate order priority based on preparation time and parallel processing capability
   void calculatePriority() {
@@ -140,19 +149,82 @@ class Order {
     }
   }
 
+  // Convert Order to Map for Firestore
+  Map<String, dynamic> toFirestore() {
+    return {
+      'id': id,
+      'orderId': orderId,
+      'userId': userId,
+      'tableNumber': tableNumber,
+      'items':
+          items
+              .map(
+                (cartItem) => {
+                  'menuItem': {
+                    'id': cartItem.item.id,
+                    'name': cartItem.item.name,
+                    'description': cartItem.item.description,
+                    'price': cartItem.item.price,
+                    'category': cartItem.item.category,
+                    'imageUrl': cartItem.item.imageUrl,
+                    'preparationTime': cartItem.item.preparationTime,
+                    'canPrepareInParallel': cartItem.item.canPrepareInParallel,
+                    'isPopular': cartItem.item.isPopular,
+                    'rating': cartItem.item.rating,
+                    'isDeleted': cartItem.item.isDeleted,
+                    'deletedAt': cartItem.item.deletedAt?.toIso8601String(),
+                  },
+                  'quantity': cartItem.quantity,
+                  'totalPrice': cartItem.totalPrice,
+                },
+              )
+              .toList(),
+      'totalPrice': totalPrice,
+      'status': status.toString().split('.').last,
+      'createdAt': createdAt.toIso8601String(),
+      'completedAt': completedAt?.toIso8601String(),
+      'priority': priority,
+      'hasReadyItems': hasReadyItems,
+      'isKitchenOrder': isKitchenOrder,
+      'isStaffOrder': isStaffOrder,
+      'kitchenStatus': kitchenStatus?.toString().split('.').last,
+      'staffStatus': staffStatus?.toString().split('.').last,
+    };
+  }
+
   // Retain the original fromJson method but adjust it for the new model
   factory Order.fromJson(Map<dynamic, dynamic> json) {
     // Convert the item list in JSON to a list of MenuItem objects
     List<CartItem> items = [];
     if (json.containsKey('items') && json['items'] is List) {
       items =
-          (json['items'] as List).map((item) {
-            // Adjust according to actual needs
-            // If items are CartItem or can be converted to CartItem, perform conversion
+          (json['items'] as List).map((itemData) {
+            final menuItemData = itemData['menuItem'] as Map<String, dynamic>;
+            final menuItem = MenuItem(
+              id: menuItemData['id'],
+              name: menuItemData['name'],
+              description: menuItemData['description'],
+              price: (menuItemData['price'] as num).toDouble(),
+              category: menuItemData['category'],
+              itemId: menuItemData['id'], // Using id as itemId for consistency
+              imageUrl: menuItemData['imageUrl'] ?? '',
+              preparationTime:
+                  (menuItemData['preparationTime'] as num).toDouble(),
+              canPrepareInParallel:
+                  menuItemData['canPrepareInParallel'] ?? false,
+              isPopular: menuItemData['isPopular'] ?? false,
+              rating: (menuItemData['rating'] ?? 0).toDouble(),
+              isDeleted: menuItemData['isDeleted'] ?? false,
+              deletedAt:
+                  menuItemData['deletedAt'] != null
+                      ? DateTime.parse(menuItemData['deletedAt'])
+                      : null,
+            );
+
             return CartItem(
-              item: item,
-              quantity: 1,
-            ); // Simplified example, adjust based on actual data structure
+              item: menuItem,
+              quantity: itemData['quantity'] ?? 1,
+            );
           }).toList();
     }
 
@@ -200,9 +272,39 @@ class Order {
               : 0.0,
       status: orderStatus,
       createdAt:
-          json['timestamp'] != null
-              ? DateTime.parse(json['timestamp'].toString())
+          json['createdAt'] != null
+              ? DateTime.parse(json['createdAt'].toString())
               : DateTime.now(),
+      completedAt:
+          json['completedAt'] != null
+              ? DateTime.parse(json['completedAt'].toString())
+              : null,
+      kitchenStatus:
+          json['kitchenStatus'] != null
+              ? _parseOrderStatus(json['kitchenStatus'].toString())
+              : null,
+      staffStatus:
+          json['staffStatus'] != null
+              ? _parseOrderStatus(json['staffStatus'].toString())
+              : null,
     );
+  }
+
+  // Helper method to parse OrderStatus from string
+  static OrderStatus _parseOrderStatus(String statusStr) {
+    switch (statusStr.toLowerCase()) {
+      case 'pending':
+        return OrderStatus.pending;
+      case 'preparing':
+        return OrderStatus.preparing;
+      case 'ready':
+        return OrderStatus.ready;
+      case 'completed':
+        return OrderStatus.completed;
+      case 'cancelled':
+        return OrderStatus.cancelled;
+      default:
+        return OrderStatus.pending;
+    }
   }
 }

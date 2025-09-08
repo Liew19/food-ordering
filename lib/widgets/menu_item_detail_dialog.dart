@@ -7,7 +7,7 @@ import '../theme.dart';
 class MenuItemDetailDialog extends StatelessWidget {
   final MenuItem item;
 
-  const MenuItemDetailDialog({Key? key, required this.item}) : super(key: key);
+  const MenuItemDetailDialog({super.key, required this.item});
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +31,7 @@ class MenuItemDetailDialog extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.2),
+              color: Colors.black.withValues(alpha: 0.2),
               blurRadius: 10,
               offset: const Offset(0, 5),
             ),
@@ -166,7 +166,7 @@ class MenuItemDetailDialog extends StatelessWidget {
                     right: 10,
                     child: Container(
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.5),
+                        color: Colors.black.withValues(alpha: 0.5),
                         shape: BoxShape.circle,
                       ),
                       child: IconButton(
@@ -330,7 +330,7 @@ class MenuItemDetailDialog extends StatelessWidget {
                                   ),
                                   label: const Text('Add to Cart'),
                                   style: AppTheme.primaryButtonStyle.copyWith(
-                                    shape: MaterialStateProperty.all<
+                                    shape: WidgetStateProperty.all<
                                       RoundedRectangleBorder
                                     >(
                                       RoundedRectangleBorder(
@@ -338,7 +338,7 @@ class MenuItemDetailDialog extends StatelessWidget {
                                       ),
                                     ),
                                     foregroundColor:
-                                        MaterialStateProperty.all<Color>(
+                                        WidgetStateProperty.all<Color>(
                                           Colors.white,
                                         ),
                                   ),

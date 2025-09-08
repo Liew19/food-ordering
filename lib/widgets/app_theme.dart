@@ -8,12 +8,12 @@ class AdvancedMenuAppBar extends StatelessWidget {
   final List<Widget>? extraActions;
 
   const AdvancedMenuAppBar({
-    Key? key,
+    super.key,
     required this.isDarkMode,
     required this.onThemeChanged,
     this.title = 'Menu',
     this.extraActions,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -63,7 +63,7 @@ class AdvancedMenuAppBar extends StatelessWidget {
                     end: Alignment.bottomCenter,
                     colors: [
                       Colors.transparent,
-                      AppTheme.darkShadowColor.withOpacity(0.3),
+                      AppTheme.darkShadowColor.withValues(alpha: 0.3),
                     ],
                   ),
                 ),
@@ -117,7 +117,7 @@ class AdvancedMenuAppBar extends StatelessWidget {
               color:
                   isDarkMode
                       ? AppTheme.cardColor
-                      : Colors.white.withOpacity(0.9),
+                      : Colors.white.withValues(alpha: 0.9),
               borderRadius: BorderRadius.circular(25),
               boxShadow: [
                 BoxShadow(
@@ -145,12 +145,12 @@ class GradientMenuItem extends StatelessWidget {
   final bool isActive;
 
   const GradientMenuItem({
-    Key? key,
+    super.key,
     required this.icon,
     required this.title,
     required this.onTap,
     this.isActive = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -173,8 +173,8 @@ class GradientMenuItem extends StatelessWidget {
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(16),
-          splashColor: AppTheme.primaryColor.withOpacity(0.3),
-          highlightColor: AppTheme.primaryColor.withOpacity(0.1),
+          splashColor: AppTheme.primaryColor.withValues(alpha: 0.3),
+          highlightColor: AppTheme.primaryColor.withValues(alpha: 0.1),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Row(
@@ -202,7 +202,7 @@ class GradientMenuItem extends StatelessWidget {
                   Icons.arrow_forward_ios,
                   color:
                       isActive
-                          ? AppTheme.textDarkColor.withOpacity(0.7)
+                          ? AppTheme.textDarkColor.withValues(alpha: 0.7)
                           : AppTheme.textMutedColor,
                   size: 16,
                 ),

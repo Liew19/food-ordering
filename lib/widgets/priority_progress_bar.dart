@@ -3,8 +3,7 @@ import 'package:flutter/material.dart';
 class PriorityProgressBar extends StatelessWidget {
   final double priority;
 
-  const PriorityProgressBar({Key? key, required this.priority})
-    : super(key: key);
+  const PriorityProgressBar({super.key, required this.priority});
 
   // Get color based on priority value
   Color _getPriorityColor(double priority) {

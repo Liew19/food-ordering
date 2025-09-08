@@ -5,10 +5,10 @@ class MenuSearchBar extends StatelessWidget {
   final Function(String) onSearchChanged;
 
   const MenuSearchBar({
-    Key? key,
+    super.key,
     required this.controller,
     required this.onSearchChanged,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

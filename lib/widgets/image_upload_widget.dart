@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'dart:typed_data';
+// 'dart:typed_data' elements are available via foundation
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -15,14 +15,14 @@ class ImageUploadWidget extends StatefulWidget {
   final String placeholder;
 
   const ImageUploadWidget({
-    Key? key,
+    super.key,
     required this.onImageUploaded,
     this.initialImageUrl,
     this.folder,
     this.width = 200,
     this.height = 200,
     this.placeholder = 'Tap to upload image',
-  }) : super(key: key);
+  });
 
   @override
   State<ImageUploadWidget> createState() => _ImageUploadWidgetState();
