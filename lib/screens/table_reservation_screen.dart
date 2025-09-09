@@ -570,7 +570,35 @@ class _TableReservationScreenState extends State<TableReservationScreen> {
           elevation: 4.0,
           iconTheme: const IconThemeData(color: Colors.white),
         ),
-        body: const Center(child: CircularProgressIndicator()),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const Icon(Icons.lock_outline, size: 48, color: Colors.grey),
+                const SizedBox(height: 16),
+                const Text(
+                  'You need to log in to make a reservation.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 16),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pushNamed('/login');
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).primaryColor,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text('Go to Login'),
+                ),
+              ],
+            ),
+          ),
+        ),
       );
     }
 

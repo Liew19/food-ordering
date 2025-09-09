@@ -168,17 +168,6 @@ class MainScreenState extends State<MainScreen> {
     _selectedIndex = widget.initialIndex;
   }
 
-  static final List<Widget> _screens = [
-    HomeScreen(),
-    CartScreen(),
-    OrderStatusScreen(),
-    // Use Firestore-based kitchen screen
-    KitchenScreenFirestore(),
-    StaffScreen(), // Using updated StaffScreen with Firestore integration
-    ProfileScreen(),
-    TableReservationScreen(),
-  ];
-
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
@@ -187,29 +176,59 @@ class MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<auth.AppAuthProvider>(context);
+
+    // Build tabs dynamically based on role
+    List<Widget> screens;
+    List<BottomNavigationBarItem> items;
+
+    if (authProvider.isKitchenStaff) {
+      screens = [KitchenScreenFirestore(), ProfileScreen()];
+      items = const [
+        BottomNavigationBarItem(icon: Icon(Icons.kitchen), label: 'Kitchen'),
+        BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+      ];
+    } else if (authProvider.isStaff) {
+      screens = [StaffScreen(), ProfileScreen()];
+      items = const [
+        BottomNavigationBarItem(icon: Icon(Icons.badge), label: 'Staff'),
+        BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+      ];
+    } else {
+      // Default (customers, admins, or unknown role): no Kitchen/Staff tabs
+      screens = [
+        HomeScreen(),
+        CartScreen(),
+        OrderStatusScreen(),
+        ProfileScreen(),
+        TableReservationScreen(),
+      ];
+      items = const [
+        BottomNavigationBarItem(
+          icon: Icon(Icons.restaurant_menu),
+          label: 'Menu',
+        ),
+        BottomNavigationBarItem(icon: Icon(Icons.shopping_cart), label: 'Cart'),
+        BottomNavigationBarItem(icon: Icon(Icons.receipt), label: 'Orders'),
+        BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.calendar_today),
+          label: 'Reserve',
+        ),
+      ];
+    }
+
+    // Clamp selected index if the role changed and reduced tab count
+    if (_selectedIndex >= screens.length) {
+      _selectedIndex = 0;
+    }
+
     return Scaffold(
-      body: _screens[_selectedIndex],
+      body: screens[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
-        selectedItemColor: const Color(0xFFE53935), // Red color to match AppBar
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.restaurant_menu),
-            label: 'Menu',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.shopping_cart),
-            label: 'Cart',
-          ),
-          BottomNavigationBarItem(icon: Icon(Icons.receipt), label: 'Orders'),
-          BottomNavigationBarItem(icon: Icon(Icons.kitchen), label: 'Kitchen'),
-          BottomNavigationBarItem(icon: Icon(Icons.badge), label: 'Staff'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_today),
-            label: 'Reserve',
-          ),
-        ],
+        selectedItemColor: const Color(0xFFE53935),
+        items: items,
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
       ),

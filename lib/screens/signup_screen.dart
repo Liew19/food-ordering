@@ -259,26 +259,6 @@ class _SignupScreenState extends State<SignupScreen> {
           ),
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.restaurant_menu),
-            label: 'Menu',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.shopping_cart),
-            label: 'Cart',
-          ),
-          BottomNavigationBarItem(icon: Icon(Icons.receipt), label: 'Orders'),
-          BottomNavigationBarItem(icon: Icon(Icons.kitchen), label: 'Kitchen'),
-          BottomNavigationBarItem(icon: Icon(Icons.badge), label: 'Staff'),
-        ],
-        currentIndex: 0,
-        onTap: (_) {
-          // Disabled until signed up
-        },
-      ),
     );
   }
 }
