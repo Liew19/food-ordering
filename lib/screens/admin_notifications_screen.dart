@@ -28,15 +28,45 @@ class _AdminNotificationsScreenState extends State<AdminNotificationsScreen> {
     });
 
     try {
-      final snapshot =
+      // Avoid composite index by splitting into two queries
+      final pendingSnap =
           await _firestore
-              .collection('admin_notifications')
-              .orderBy('createdAt', descending: true)
+              .collection('reservations')
+              .where('status', isEqualTo: 'pending')
               .get();
 
+      final confirmedSnap =
+          await _firestore
+              .collection('reservations')
+              .where('status', isEqualTo: 'confirmed')
+              .get();
+
+      final pending =
+          pendingSnap.docs.map((doc) => {'id': doc.id, ...doc.data()}).toList();
+      final confirmed =
+          confirmedSnap.docs
+              .map((doc) => {'id': doc.id, ...doc.data()})
+              .toList();
+
+      int byCreatedAtDesc(Map<String, dynamic> a, Map<String, dynamic> b) {
+        final ta = a['createdAt'];
+        final tb = b['createdAt'];
+        DateTime da =
+            ta is Timestamp
+                ? ta.toDate()
+                : DateTime.fromMillisecondsSinceEpoch(0);
+        DateTime db =
+            tb is Timestamp
+                ? tb.toDate()
+                : DateTime.fromMillisecondsSinceEpoch(0);
+        return db.compareTo(da);
+      }
+
+      pending.sort(byCreatedAtDesc);
+      confirmed.sort(byCreatedAtDesc);
+
       setState(() {
-        _notifications =
-            snapshot.docs.map((doc) => {'id': doc.id, ...doc.data()}).toList();
+        _notifications = [...pending, ...confirmed];
         _isLoading = false;
       });
     } catch (e) {
@@ -46,7 +76,7 @@ class _AdminNotificationsScreenState extends State<AdminNotificationsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to load notifications: $e'),
+            content: Text('Failed to load reservations: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -54,63 +84,7 @@ class _AdminNotificationsScreenState extends State<AdminNotificationsScreen> {
     }
   }
 
-  Future<void> _markAsRead(String notificationId) async {
-    try {
-      await _firestore
-          .collection('admin_notifications')
-          .doc(notificationId)
-          .update({'read': true});
-
-      setState(() {
-        final index = _notifications.indexWhere(
-          (n) => n['id'] == notificationId,
-        );
-        if (index != -1) {
-          _notifications[index]['read'] = true;
-        }
-      });
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to mark notification as read: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
-
-  Future<void> _deleteNotification(String notificationId) async {
-    try {
-      await _firestore
-          .collection('admin_notifications')
-          .doc(notificationId)
-          .delete();
-
-      setState(() {
-        _notifications.removeWhere((n) => n['id'] == notificationId);
-      });
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Notification deleted'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to delete notification: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
+  // Removed unused admin_notifications helpers after switching to reservations list
 
   String _formatTimestamp(dynamic timestamp) {
     if (timestamp == null) return 'Unknown';
@@ -123,25 +97,14 @@ class _AdminNotificationsScreenState extends State<AdminNotificationsScreen> {
     return 'Unknown';
   }
 
-  Widget _buildNotificationCard(Map<String, dynamic> notification) {
-    final bool isRead = notification['read'] ?? false;
-    final String type = notification['type'] ?? 'unknown';
-    final Map<String, dynamic> data = notification['data'] ?? {};
-    final String formattedTime = _formatTimestamp(notification['createdAt']);
-
-    // Determine notification content based on type
-    Widget content;
-    switch (type) {
-      case 'reservation_confirmed':
-        content = _buildReservationNotification(data);
-        break;
-      default:
-        content = const Text('Unknown notification type');
-    }
+  Widget _buildNotificationCard(Map<String, dynamic> reservation) {
+    final String status = reservation['status'] ?? 'pending';
+    final bool isPending = status == 'pending';
+    final String formattedTime = _formatTimestamp(reservation['createdAt']);
 
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      color: isRead ? null : Colors.blue.shade50,
+      color: isPending ? Colors.orange.shade50 : null,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -150,13 +113,7 @@ class _AdminNotificationsScreenState extends State<AdminNotificationsScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  type.replaceAll('_', ' ').toUpperCase(),
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  ),
-                ),
+                _buildStatusChip(status),
                 Text(
                   formattedTime,
                   style: TextStyle(color: Colors.grey[600], fontSize: 12),
@@ -164,20 +121,28 @@ class _AdminNotificationsScreenState extends State<AdminNotificationsScreen> {
               ],
             ),
             const Divider(),
-            content,
+            _buildReservationDetails(reservation),
             const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                if (!isRead)
+                if (isPending)
                   TextButton(
-                    onPressed: () => _markAsRead(notification['id']),
-                    child: const Text('Mark as Read'),
+                    onPressed:
+                        () => _updateReservationStatus(
+                          reservation['id'],
+                          'confirmed',
+                        ),
+                    child: const Text('Confirm'),
                   ),
                 TextButton(
-                  onPressed: () => _deleteNotification(notification['id']),
+                  onPressed:
+                      () => _updateReservationStatus(
+                        reservation['id'],
+                        'cancelled',
+                      ),
                   style: TextButton.styleFrom(foregroundColor: Colors.red),
-                  child: const Text('Delete'),
+                  child: const Text('Cancel'),
                 ),
               ],
             ),
@@ -187,21 +152,19 @@ class _AdminNotificationsScreenState extends State<AdminNotificationsScreen> {
     );
   }
 
-  Widget _buildReservationNotification(Map<String, dynamic> data) {
-    final String userName = data['userName'] ?? 'Unknown';
-    final String userEmail = data['userEmail'] ?? 'Unknown';
-    final String date = data['date'] ?? 'Unknown';
-    final String time = data['time'] ?? 'Unknown';
-    final int tableId = data['tableId'] ?? 0;
-    final int guests = data['numberOfGuests'] ?? 0;
-    final String userId = data['userId'] ?? '';
-    final Map<String, dynamic> userDetails = data['userDetails'] ?? {};
+  Widget _buildReservationDetails(Map<String, dynamic> r) {
+    final String userName = r['userName'] ?? 'Unknown';
+    final String userEmail = r['userEmail'] ?? 'Unknown';
+    final String time = r['time'] ?? 'Unknown';
+    final int tableId = r['tableId'] ?? 0;
+    final int guests = r['numberOfGuests'] ?? 0;
+    final String date = _formatTimestamp(r['date']);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'New Reservation Confirmed',
+          'Table Reservation',
           style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 16,
@@ -215,22 +178,67 @@ class _AdminNotificationsScreenState extends State<AdminNotificationsScreen> {
         Text('Time: $time'),
         Text('Table: $tableId'),
         Text('Guests: $guests'),
-        const SizedBox(height: 8),
-        const Text(
-          'User Details:',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 4),
-        Text('User ID: $userId'),
-        ...userDetails.entries.map((entry) {
-          // Skip complex objects and arrays
-          if (entry.value is! Map && entry.value is! List) {
-            return Text('${entry.key}: ${entry.value}');
-          }
-          return const SizedBox.shrink();
-        }),
       ],
     );
+  }
+
+  Widget _buildStatusChip(String status) {
+    Color color;
+    switch (status) {
+      case 'confirmed':
+        color = Colors.green;
+        break;
+      case 'cancelled':
+        color = Colors.red;
+        break;
+      default:
+        color = Colors.orange;
+    }
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.6)),
+      ),
+      child: Text(
+        status.toUpperCase(),
+        style: TextStyle(
+          color: color,
+          fontWeight: FontWeight.bold,
+          fontSize: 12,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _updateReservationStatus(
+    String reservationId,
+    String status,
+  ) async {
+    try {
+      await _firestore.collection('reservations').doc(reservationId).update({
+        'status': status,
+      });
+      await _loadNotifications();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Reservation ${status.toLowerCase()}'),
+            backgroundColor: status == 'confirmed' ? Colors.green : Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to update: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   @override
